@@ -1,0 +1,3497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paycheck Budget Tracker — Professional Finance Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════════════
+   DESIGN SYSTEM
+   Palette: Deep charcoal · Warm cream · Coral gold
+   Tone: Refined editorial fintech — Bloomberg meets
+         a product you'd pay $79/yr to use
+═══════════════════════════════════════════════════ */
+
+:root {
+  /* Surfaces */
+  --bg:        #12110f;
+  --surface:   #1a1916;
+  --card:      #1f1e1b;
+  --raised:    #252320;
+  --border:    #2e2c28;
+  --border-lt: #3a3834;
+
+  /* Accent palette */
+  --gold:      #e8a045;
+  --gold-dim:  #e8a04518;
+  --gold-glow: #e8a04530;
+  --coral:     #e05c4b;
+  --coral-dim: #e05c4b18;
+  --sage:      #5eaa7e;
+  --sage-dim:  #5eaa7e18;
+  --sky:       #4e8fc7;
+  --sky-dim:   #4e8fc718;
+  --lavender:  #8b7ecf;
+
+  /* Typography */
+  --cream:     #f0ece4;
+  --cream-2:   #c8c2b6;
+  --muted:     #7a7469;
+  --faint:     #3d3a35;
+
+  /* Semantic */
+  --pos:       #5eaa7e;
+  --neg:       #e05c4b;
+  --warn:      #e8a045;
+  --input-clr: #7eb8e8;
+
+  /* Geometry */
+  --radius:    8px;
+  --radius-lg: 12px;
+
+  /* Fonts */
+  --display: 'Syne', sans-serif;
+  --body:    'Instrument Sans', sans-serif;
+  --mono:    'JetBrains Mono', monospace;
+
+  /* ── Legacy aliases — keep old JS color strings working ── */
+  --red:    #e05c4b;   /* = --coral */
+  --green:  #5eaa7e;   /* = --sage  */
+  --amber:  #e8a045;   /* = --gold  */
+  --blue:   #4e8fc7;   /* = --sky   */
+  --purple: #8b7ecf;   /* = --lavender */
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: hidden; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--cream);
+  min-height: 100vh;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border-lt); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ══════════════════════════════════════
+   HEADER
+══════════════════════════════════════ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 36px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* animated shimmer line at top */
+  background-image: linear-gradient(90deg,
+    transparent 0%, var(--gold-dim) 30%,
+    var(--gold-glow) 50%, var(--gold-dim) 70%, transparent 100%);
+  background-size: 200% 2px;
+  background-repeat: no-repeat;
+  background-position: 0% 0%;
+  animation: headerShimmer 4s ease-in-out infinite;
+}
+@keyframes headerShimmer {
+  0%   { background-position: -100% 0%; }
+  50%  { background-position: 100% 0%; }
+  100% { background-position: -100% 0%; }
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, var(--gold) 0%, #c86830 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 2px 12px var(--gold-glow), 0 0 0 1px var(--gold)40;
+  flex-shrink: 0;
+}
+
+.app-title h1 {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: -0.2px;
+}
+.app-title h1 span {
+  color: var(--gold);
+}
+
+.title-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-lt);
+}
+
+.app-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  background: var(--gold-dim);
+  color: var(--gold);
+  border: 1px solid var(--gold)30;
+  border-radius: 4px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ── Buttons ── */
+.btn {
+  font-family: var(--body);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-lt);
+  color: var(--muted);
+}
+.btn-ghost:hover {
+  border-color: var(--gold)60;
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold) 0%, #c86830 100%);
+  color: #12110f;
+  box-shadow: 0 1px 8px var(--gold-glow);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--gold-glow);
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-lt);
+  color: var(--cream-2);
+}
+.btn-outline:hover { border-color: var(--sage); color: var(--sage); background: var(--sage-dim); }
+.btn-danger {
+  background: var(--coral-dim);
+  color: var(--coral);
+  border: 1px solid var(--coral)30;
+}
+.btn-danger:hover { background: var(--coral); color: white; }
+
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+.nav-tabs {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 36px;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+
+.nav-tab {
+  font-family: var(--body);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 13px 18px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s;
+  letter-spacing: 0.1px;
+  position: relative;
+}
+.nav-tab:hover { color: var(--cream-2); }
+.nav-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════
+   PAGE LAYOUT
+══════════════════════════════════════ */
+.page {
+  display: none;
+  padding: 28px 36px;
+  max-width: 1380px;
+  animation: fadeUp 0.2s ease;
+}
+.page.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════
+   KPI CARDS
+══════════════════════════════════════ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px #00000040;
+}
+
+/* Geometric accent corner */
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  opacity: 0.06;
+}
+.kpi-card.blue::after   { background: var(--sky); }
+.kpi-card.amber::after  { background: var(--gold); }
+.kpi-card.green::after  { background: var(--sage); }
+.kpi-card.red::after    { background: var(--coral); }
+
+/* Top accent bar */
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.kpi-card.blue::before   { background: linear-gradient(90deg, var(--sky), transparent); }
+.kpi-card.amber::before  { background: linear-gradient(90deg, var(--gold), transparent); }
+.kpi-card.green::before  { background: linear-gradient(90deg, var(--sage), transparent); }
+.kpi-card.red::before    { background: linear-gradient(90deg, var(--coral), transparent); }
+
+.kpi-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.kpi-value {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.kpi-card.blue  .kpi-value { color: var(--sky); }
+.kpi-card.amber .kpi-value { color: var(--gold); }
+.kpi-card.green .kpi-value { color: var(--sage); }
+.kpi-card.red   .kpi-value { color: var(--coral); }
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--body);
+}
+
+/* ══════════════════════════════════════
+   GRID LAYOUTS
+══════════════════════════════════════ */
+.section-grid         { display: grid; grid-template-columns: 1fr 1fr;  gap: 18px; margin-bottom: 18px; }
+.section-grid.single  { grid-template-columns: 1fr; }
+.section-grid.thirds  { grid-template-columns: 2fr 1fr; }
+
+/* ══════════════════════════════════════
+   CARDS
+══════════════════════════════════════ */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;  /* clips scroll-wrap children cleanly */
+}
+/* scroll-wrap handles its own overflow */
+.scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.scroll-wrap .data-table { display: table; width: 100%; }
+
+.card-header {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  /* Subtle left accent */
+  position: relative;
+}
+
+.card-title {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title.blue   { color: var(--sky); }
+.card-title.amber  { color: var(--gold); }
+.card-title.green  { color: var(--sage); }
+.card-title.red    { color: var(--coral); }
+.card-title.purple { color: var(--lavender); }
+
+/* ══════════════════════════════════════
+   TABLES
+══════════════════════════════════════ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-scroll { overflow-x: auto; }
+/* All cards containing tables get horizontal scroll */
+.card { overflow: hidden; }
+.card > .data-table,
+.card > table { overflow-x: auto; display: block; }
+/* But for clean rendering, keep table as table inside scroll wrapper */
+.scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-wrap .data-table { display: table; }
+
+.data-table th {
+  background: #171613;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.data-table th.right  { text-align: right; }
+.data-table th.center { text-align: center; }
+
+.data-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border)70;
+  vertical-align: middle;
+  box-sizing: border-box;
+  overflow: visible;
+  white-space: nowrap;  /* prevent cell content wrapping unless notes */
+}
+.data-table td:last-child { white-space: normal; }  /* notes column can wrap */
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #ffffff04; }
+
+.data-table tr.section-row td {
+  background: #1c1a17;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--gold);
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.data-table tr.total-row td {
+  background: #252320;
+  font-weight: 600;
+  border-top: 1px solid var(--border-lt);
+  color: var(--cream);
+}
+
+/* ══════════════════════════════════════
+   INPUTS
+══════════════════════════════════════ */
+.num-input, .text-input, .select-input {
+  background: #0e0d0b;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--input-clr);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  width: 100%;
+  min-width: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: right;
+  overflow: visible;
+}
+.text-input  { text-align: left; font-family: var(--body); color: var(--cream); }
+.select-input { text-align: left; font-family: var(--body); color: var(--gold); }
+.notes-field  { text-align: left; }
+
+.num-input:focus, .text-input:focus, .select-input:focus {
+  outline: none;
+  border-color: var(--gold)70;
+  box-shadow: 0 0 0 3px var(--gold-dim);
+  background: #13120f;
+}
+
+/* Formula / calculated cells */
+.num-input.formula {
+  color: var(--sage);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  cursor: default;
+  pointer-events: none;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 5px 4px;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+.num-input.formula[id*="net"],
+.num-input.formula[id*="total"],
+.num-input.formula[id*="addl"] { color: var(--sage); }
+.num-input.formula[id*="var"]  { color: var(--muted); }
+
+/* Notes field */
+.notes-field {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  font-family: var(--body);
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--faint);
+  padding: 2px 4px;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.notes-field:focus {
+  outline: none;
+  border-bottom-color: var(--muted);
+  color: var(--cream-2);
+}
+
+/* ══════════════════════════════════════
+   STATUS PILLS
+══════════════════════════════════════ */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.pill.green { background: var(--sage-dim);  color: var(--sage);  border: 1px solid var(--sage)30; }
+.pill.red   { background: var(--coral-dim); color: var(--coral); border: 1px solid var(--coral)30; }
+.pill.amber { background: var(--gold-dim);  color: var(--gold);  border: 1px solid var(--gold)30; }
+
+/* ══════════════════════════════════════
+   PROGRESS BARS
+══════════════════════════════════════ */
+.progress-wrap {
+  background: var(--faint);
+  border-radius: 3px;
+  height: 5px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.progress-bar.green  { background: linear-gradient(90deg, var(--sage), #7dd4a0); }
+.progress-bar.blue   { background: linear-gradient(90deg, var(--sky), #7ab8e8); }
+.progress-bar.amber  { background: linear-gradient(90deg, var(--gold), #f0c070); }
+.progress-bar.red    { background: linear-gradient(90deg, var(--coral), #f08070); }
+.progress-bar.purple { background: linear-gradient(90deg, var(--lavender), #a89de0); }
+
+/* ══════════════════════════════════════
+   YTD ROWS
+══════════════════════════════════════ */
+.ytd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--border)60;
+  transition: background 0.12s;
+}
+.ytd-row:hover { background: #ffffff04; }
+.ytd-row:last-child { border-bottom: none; }
+.ytd-label { font-size: 12.5px; font-weight: 500; color: var(--cream-2); }
+.ytd-value {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sage);
+  letter-spacing: -0.3px;
+}
+
+/* ══════════════════════════════════════
+   PAYCHECK CALENDAR
+══════════════════════════════════════ */
+.pay-calendar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 18px;
+}
+.pay-week {
+  background: #171613;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.pay-week:hover { border-color: var(--border-lt); }
+.pay-week-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.pay-week-amount {
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--sky);
+  letter-spacing: -0.5px;
+}
+.pay-week-balance {
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-top: 5px;
+  letter-spacing: -0.2px;
+}
+
+/* ══════════════════════════════════════
+   GOAL CARDS
+══════════════════════════════════════ */
+.goal-row {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border)60;
+  transition: background 0.12s;
+}
+.goal-row:hover { background: #ffffff03; }
+.goal-row:last-child { border-bottom: none; }
+.goal-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.goal-name { font-weight: 600; font-size: 13px; color: var(--cream); }
+.goal-pct {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--sage);
+  font-weight: 600;
+  background: var(--sage-dim);
+  border: 1px solid var(--sage)30;
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+.goal-amounts {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 7px;
+  font-family: var(--mono);
+}
+
+/* ══════════════════════════════════════
+   DEBT PRIORITY
+══════════════════════════════════════ */
+.priority-1 {
+  color: var(--coral);
+  font-weight: 700;
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--coral-dim);
+  border: 1px solid var(--coral)30;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.priority-2 {
+  color: var(--gold);
+  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold)30;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.priority-3 { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+
+/* ══════════════════════════════════════
+   ALERTS
+══════════════════════════════════════ */
+.alert {
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 3px solid;
+}
+.alert.info    { background: var(--sky-dim);   color: #8bbfde; border-left-color: var(--sky);   border: 1px solid var(--sky)20;  border-left: 3px solid var(--sky); }
+.alert.warn    { background: var(--gold-dim);  color: var(--gold); border-left: 3px solid var(--gold); border: 1px solid var(--gold)20; border-left: 3px solid var(--gold); }
+.alert.success { background: var(--sage-dim);  color: var(--sage); border-left: 3px solid var(--sage); }
+
+/* ══════════════════════════════════════
+   SAVE BAR TOAST
+══════════════════════════════════════ */
+.save-bar {
+  position: fixed;
+  bottom: 24px;
+  right: 28px;
+  background: var(--sage);
+  color: #0a1a12;
+  padding: 9px 20px;
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  transform: translateY(8px);
+  pointer-events: none;
+  box-shadow: 0 4px 20px #5eaa7e40;
+}
+.save-bar.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ══════════════════════════════════════
+   TOGGLE
+══════════════════════════════════════ */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--border-lt);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle.on { background: var(--sage); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  background: white;
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(16px); }
+
+/* ══════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════ */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 960px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .section-grid, .section-grid.thirds { grid-template-columns: 1fr; }
+  .pay-calendar { grid-template-columns: repeat(2, 1fr); }
+  .page { padding: 18px 20px; }
+  .nav-tabs { padding: 0 20px; }
+  .app-header { padding: 0 20px; }
+}
+
+/* ══════════════════════════════════════
+   DECORATIVE — grid lines behind pages
+══════════════════════════════════════ */
+/* Grid lines removed from fixed overlay — caused click-through issues.
+   Applied via body background instead. */
+body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 0%, #2a200e18 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, #1a2a1a14 0%, transparent 60%),
+    linear-gradient(var(--faint)15 1px, transparent 1px),
+    linear-gradient(90deg, var(--faint)15 1px, transparent 1px);
+  background-size: auto, auto, 40px 40px, 40px 40px;
+  background-attachment: fixed, fixed, fixed, fixed;
+}
+
+
+
+/* ══════════════════════════════════════
+   BILL CALENDAR
+══════════════════════════════════════ */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  padding: 16px;
+}
+.cal-day-header {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 0;
+}
+.cal-day {
+  background: #171613;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-height: 70px;
+  padding: 5px;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.cal-day:hover { border-color: var(--border-lt); }
+.cal-day.empty { background: transparent; border-color: transparent; }
+.cal-day.today { border-color: var(--gold); }
+.cal-day.payday { background: #1a220e; border-color: var(--sage)60; }
+.cal-day-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.cal-day.today .cal-day-num { color: var(--gold); }
+.cal-day.payday .cal-day-num { color: var(--sage); }
+.cal-bill {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+.cal-bill.housing     { background: #1e2a1e; color: var(--sage); }
+.cal-bill.utility     { background: #18202a; color: var(--sky); }
+.cal-bill.transport   { background: #2a2218; color: var(--gold); }
+.cal-bill.sub         { background: #22182a; color: var(--lavender); }
+.cal-bill.health      { background: #2a1818; color: var(--coral); }
+.cal-bill.debt        { background: #2a1a14; color: #e08060; }
+.cal-bill.other       { background: #1e1e1e; color: var(--cream-2); }
+.cal-bill.payday-tag  { background: #182a20; color: var(--sage); font-weight:700; }
+.cal-month-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.cal-month-title {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cream);
+  flex: 1;
+  text-align: center;
+}
+.cal-nav-btn {
+  background: var(--raised);
+  border: 1px solid var(--border);
+  color: var(--cream-2);
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.cal-nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+}
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.cal-legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+}
+
+/* ══════════════════════════════════════
+   NET WORTH
+══════════════════════════════════════ */
+.nw-hero {
+  text-align: center;
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.nw-number {
+  font-family: var(--mono);
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.nw-number.positive { color: var(--sage); }
+.nw-number.negative { color: var(--coral); }
+.nw-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.nw-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.nw-col {
+  padding: 16px 20px;
+}
+.nw-col:first-child { border-right: 1px solid var(--border); }
+.nw-col-title {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.nw-col-title.assets  { color: var(--sage); }
+.nw-col-title.liab    { color: var(--coral); }
+.nw-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════
+   50/30/20 DASHBOARD
+══════════════════════════════════════ */
+.rule-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+.rule-col {
+  padding: 20px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.rule-col:last-child { border-right: none; }
+.rule-pct-big {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+  letter-spacing: -1px;
+}
+.rule-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.rule-target { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.rule-progress-stack { padding: 0 20px 20px; }
+.rule-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.rule-bar-label { width: 90px; color: var(--cream-2); flex-shrink: 0; text-align: right; }
+.rule-bar-wrap { flex: 1; background: var(--faint); border-radius: 3px; height: 6px; overflow: hidden; }
+.rule-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.rule-bar-val { width: 50px; font-family: var(--mono); font-size: 10px; color: var(--muted); flex-shrink: 0; }
+.rule-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+/* ══════════════════════════════════════
+   TRANSACTION LOG
+══════════════════════════════════════ */
+.txn-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.txn-toolbar select,
+.txn-toolbar input[type="text"],
+.txn-toolbar input[type="date"] {
+  background: var(--input-bg, #0e0d0b);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--cream-2);
+  font-family: var(--body);
+  font-size: 12px;
+  padding: 5px 9px;
+  transition: border-color 0.15s;
+}
+.txn-toolbar select:focus,
+.txn-toolbar input:focus { outline: none; border-color: var(--gold)70; }
+.txn-summary-bar {
+  display: flex;
+  gap: 24px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: #171613;
+}
+.txn-sum-item { font-size: 11px; }
+.txn-sum-label { color: var(--muted); margin-right: 5px; }
+.txn-sum-val { font-family: var(--mono); font-weight: 600; font-size: 12px; }
+
+/* ══════════════════════════════════════
+   SINKING FUNDS
+══════════════════════════════════════ */
+.sf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+.sf-card {
+  background: #171613;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  transition: border-color 0.15s;
+}
+.sf-card:hover { border-color: var(--border-lt); }
+.sf-card-name { font-weight: 600; font-size: 12px; color: var(--cream); margin-bottom: 3px; }
+.sf-card-date { font-size: 10px; color: var(--muted); margin-bottom: 8px; }
+.sf-amounts {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.sf-saved { color: var(--sage); font-weight: 600; }
+.sf-target { color: var(--muted); }
+.sf-per-pay {
+  font-size: 10px;
+  color: var(--gold);
+  margin-top: 5px;
+  font-family: var(--mono);
+}
+
+/* ══════════════════════════════════════
+   CHARTS
+══════════════════════════════════════ */
+.chart-container {
+  padding: 16px;
+  position: relative;
+}
+.chart-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+canvas { max-width: 100%; }
+
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-title">
+    <div class="logo-mark">💰</div>
+    <div>
+      <h1>Paycheck <span>Budget</span> Tracker</h1>
+    </div>
+    <div class="title-divider"></div>
+    <span class="app-subtitle">Personal Finance Command Center</span>
+    <span class="badge">v1.0</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="exportData()">↓ Export</button>
+    <button class="btn btn-ghost" onclick="importData()">↑ Import</button>
+    <button class="btn btn-primary" onclick="saveAll()">Save</button>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <div class="nav-tab active" onclick="showPage('dashboard')">Dashboard</div>
+  <div class="nav-tab" onclick="showPage('income')">Income</div>
+  <div class="nav-tab" onclick="showPage('fixed')">Fixed Expenses</div>
+  <div class="nav-tab" onclick="showPage('variable')">Variable</div>
+  <div class="nav-tab" onclick="showPage('savings')">Goals</div>
+  <div class="nav-tab" onclick="showPage('debt')">Debt Tracker</div>
+  <div class="nav-tab" onclick="showPage('networth')">Net Worth</div>
+  <div class="nav-tab" onclick="showPage('calendar')">Bill Calendar</div>
+  <div class="nav-tab" onclick="showPage('rule503020')">50/30/20</div>
+  <div class="nav-tab" onclick="showPage('transactions')">Transactions</div>
+  <div class="nav-tab" onclick="showPage('sinking')">Sinking Funds</div>
+  <div class="nav-tab" onclick="showPage('charts')">Charts</div>
+  <div class="nav-tab" onclick="showPage('settings')">Settings</div>
+</nav>
+
+<!-- Save bar -->
+<div class="save-bar" id="savebar">✓ Saved</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="page active" id="page-dashboard">
+
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-label">This Paycheck (Net)</div>
+      <div class="kpi-value" id="kpi-net">$0.00</div>
+      <div class="kpi-sub" id="kpi-gross-sub">Gross: $0.00</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Total Expenses</div>
+      <div class="kpi-value" id="kpi-expenses">$0.00</div>
+      <div class="kpi-sub" id="kpi-exp-sub">Fixed + Variable</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Savings This Pay</div>
+      <div class="kpi-value" id="kpi-savings">$0.00</div>
+      <div class="kpi-sub" id="kpi-sav-sub">All goals combined</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Cash Remaining</div>
+      <div class="kpi-value" id="kpi-remaining">$0.00</div>
+      <div class="kpi-sub" id="kpi-rem-sub">After all obligations</div>
+    </div>
+  </div>
+
+  <div id="dash-alert" class="alert info" style="display:none"></div>
+
+  <div class="section-grid">
+    <!-- Budget Status -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title blue">📈 Budget Status This Period</span>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th class="right">Budgeted</th>
+            <th class="right">Actual</th>
+            <th class="right">Variance</th>
+            <th class="center">Status</th>
+          </tr>
+        </thead>
+        <tbody id="dash-budget-table"></tbody>
+      </table>
+    </div>
+
+    <!-- YTD Summary -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title green">📆 Year-to-Date</span>
+      </div>
+      <div id="ytd-rows"></div>
+      <div style="padding:14px 20px; border-top:1px solid var(--border);">
+        <div style="font-size:11px; color:var(--muted); margin-bottom:6px; font-weight:600; letter-spacing:.5px; text-transform:uppercase;">Paychecks Received This Year</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <input type="number" id="ytd-paychecks" class="num-input" value="1" min="1" max="52" style="width:80px;box-sizing:border-box;" oninput="recalc()">
+          <span style="font-size:11px; color:var(--muted);">of 52 (weekly) or 26 (bi-weekly)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paycheck Calendar -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">
+      <span class="card-title amber">📅 Monthly Paycheck Running Balance</span>
+      <span style="font-size:11px; color:var(--muted)">Enter actual income/expenses per pay period</span>
+    </div>
+    <div class="pay-calendar" id="pay-calendar"></div>
+  </div>
+
+</div>
+
+<!-- ═══ INCOME ═══ -->
+<div class="page" id="page-income">
+  <div class="alert info">Input fields shown in blue-teal · Calculated fields shown in green · Notes fields in italic</div>
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title blue">💵 Primary Paycheck</span>
+      </div>
+      <div class="scroll-wrap">
+      <table class="data-table">
+        <colgroup>
+          <col style="min-width:200px">
+          <col style="width:120px">
+          <col style="width:120px">
+          <col style="width:110px">
+          <col style="min-width:160px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="right">This Paycheck</th>
+            <th class="right">Previous Pay</th>
+            <th class="right">Average</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Gross Pay</td><td><input class="num-input" id="inc-gross" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input" id="inc-gross-prev" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input formula" id="inc-gross-avg" readonly></td><td><input class="notes-field" placeholder="Enter gross pay..."></td></tr>
+          <tr><td>Federal Income Tax</td><td><input class="num-input" id="inc-fed" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input" id="inc-fed-prev" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input formula" id="inc-fed-avg" readonly></td><td><input class="notes-field" placeholder="Check pay stub"></td></tr>
+          <tr><td>State Income Tax</td><td><input class="num-input" id="inc-state" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input" id="inc-state-prev" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input formula" id="inc-state-avg" readonly></td><td><input class="notes-field" placeholder="Varies by state"></td></tr>
+          <tr>
+            <td>
+              Social Security
+              <span style="font-size:11px;color:var(--muted);margin-left:4px">(rate: <span id="ss-rate-display">6.20%</span>)</span>
+            </td>
+            <td><input class="num-input formula" id="inc-ss" readonly></td>
+            <td></td>
+            <td></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+                <span style="font-size:11px;color:var(--muted);flex-shrink:0">Rate %:</span>
+                <input class="num-input" id="inc-ss-rate" value="6.20"
+                  style="width:68px;flex-shrink:0;color:var(--gold)"
+                  oninput="recalc()"
+                  title="Default 6.2% (2024). Edit for custom rate.">
+                <span style="font-size:10px;color:var(--muted);font-style:italic">Default — edit to override</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Medicare
+              <span style="font-size:11px;color:var(--muted);margin-left:4px">(rate: <span id="med-rate-display">1.45%</span>)</span>
+            </td>
+            <td><input class="num-input formula" id="inc-med" readonly></td>
+            <td></td>
+            <td></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+                <span style="font-size:11px;color:var(--muted);flex-shrink:0">Rate %:</span>
+                <input class="num-input" id="inc-med-rate" value="1.45"
+                  style="width:68px;flex-shrink:0;color:var(--gold)"
+                  oninput="recalc()"
+                  title="Default 1.45% (2024). >$200k earners add 0.9%.">
+                <span style="font-size:10px;color:var(--muted);font-style:italic">Default — edit to override</span>
+              </div>
+            </td>
+          </tr>
+          <tr><td>Health Insurance</td><td><input class="num-input" id="inc-health" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input" id="inc-health-prev" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input formula" id="inc-health-avg" readonly></td><td><input class="notes-field" placeholder="Pre-tax deduction"></td></tr>
+          <tr><td>401k / Retirement</td><td><input class="num-input" id="inc-401k" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input" id="inc-401k-prev" placeholder="0.00" oninput="recalc()"></td><td><input class="num-input formula" id="inc-401k-avg" readonly></td><td><input class="notes-field" placeholder="Pre-tax contribution"></td></tr>
+          <tr><td>Other Deductions</td><td><input class="num-input" id="inc-other-ded" placeholder="0.00" oninput="recalc()"></td><td></td><td></td><td><input class="notes-field" placeholder="FSA, parking, etc."></td></tr>
+          <tr class="total-row"><td><strong>NET PAY</strong></td><td><input class="num-input formula" id="inc-net" readonly style="font-size:14px;color:var(--sage);font-weight:700"></td><td><input class="num-input formula" id="inc-net-prev" readonly></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title green">💼 Secondary & Additional Income</span>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th class="right">This Period</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Side Job / Freelance</td><td><input class="num-input" id="inc-side" placeholder="0.00" oninput="recalc()"></td><td><input class="notes-field" placeholder="Any freelance income"></td></tr>
+          <tr><td>Rental Income</td><td><input class="num-input" id="inc-rent" placeholder="0.00" oninput="recalc()"></td><td><input class="notes-field" placeholder="Monthly / Airbnb"></td></tr>
+          <tr><td>Gig Economy</td><td><input class="num-input" id="inc-gig" placeholder="0.00" oninput="recalc()"></td><td><input class="notes-field" placeholder="Uber, DoorDash, etc."></td></tr>
+          <tr><td>Investment Dividends</td><td><input class="num-input" id="inc-invest" placeholder="0.00" oninput="recalc()"></td><td><input class="notes-field" placeholder="Taxable — set aside 25%"></td></tr>
+          <tr><td>Other Income</td><td><input class="num-input" id="inc-other" placeholder="0.00" oninput="recalc()"></td><td><input class="notes-field" placeholder="Gifts, bonuses, etc."></td></tr>
+          <tr class="total-row"><td><strong>Total Additional</strong></td><td><input class="num-input formula" id="inc-addl-total" readonly></td><td></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FIXED EXPENSES ═══ -->
+<div class="page" id="page-fixed">
+  <div class="alert info">Monthly amounts are automatically split into weekly ($÷4.33) and bi-weekly ($÷2.17) portions.</div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title amber">📋 Fixed Monthly Bills</span>
+      <div style="font-size:11px; color:var(--muted)">Monthly total: <strong id="fix-total-display" style="color:var(--amber)">$0.00</strong></div>
+    </div>
+    <div class="scroll-wrap">
+    <table class="data-table" id="fixed-table">
+      <colgroup>
+        <col style="min-width:200px">
+        <col style="width:75px">
+        <col style="width:115px">
+        <col style="width:115px">
+        <col style="width:125px">
+        <col style="min-width:150px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Expense</th>
+          <th class="center">Due Date</th>
+          <th class="right">Monthly</th>
+          <th class="right">Weekly Portion</th>
+          <th class="right">Bi-Weekly Portion</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="fixed-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIABLE EXPENSES ═══ -->
+<div class="page" id="page-variable">
+  <div class="section-grid thirds" style="align-items:start">
+    <div>
+      <div class="alert info" style="margin-bottom:16px">Green = under budget · Red = over budget · Update actual spending weekly</div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title blue">📊 Variable Expenses</span>
+          <div>
+            <label style="font-size:11px; color:var(--muted); margin-right:6px;">Week of:</label>
+            <input type="date" id="var-week-date" class="select-input" style="width:140px" oninput="saveAll()">
+          </div>
+        </div>
+        <div class="scroll-wrap">
+        <table class="data-table">
+          <colgroup>
+            <col style="min-width:170px">
+            <col style="width:100px">
+            <col style="width:100px">
+            <col style="width:100px">
+            <col style="width:95px">
+            <col style="min-width:140px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th class="right">Budget</th>
+              <th class="right">Actual</th>
+              <th class="right">Variance $</th>
+              <th class="right">Variance %</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="var-tbody"></tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title green">📊 Spending Summary</span>
+      </div>
+      <div id="var-summary-rows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SAVINGS & GOALS ═══ -->
+<div class="page" id="page-savings">
+  <div class="section-grid">
+    <!-- Emergency Fund -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title red">🚨 Emergency Fund</span>
+      </div>
+      <div class="scroll-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th class="right">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Weekly Contribution</td><td><input class="num-input" id="ef-weekly" placeholder="0.00" oninput="recalc()"></td></tr>
+          <tr><td>Amount Currently Saved</td><td><input class="num-input" id="ef-saved" placeholder="0.00" oninput="recalc()"></td></tr>
+          <tr><td>Target Amount</td><td><input class="num-input" id="ef-target" placeholder="0.00" oninput="recalc()"></td></tr>
+          <tr><td>Target Date</td><td><input type="date" id="ef-date" class="select-input" style="width:100%"></td></tr>
+          <tr class="total-row"><td>% Complete</td><td><input class="num-input formula" id="ef-pct" readonly></td></tr>
+          <tr><td>Months of Expenses Covered</td><td><input class="num-input formula" id="ef-months" readonly></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div style="padding:14px 20px;">
+        <div class="progress-wrap" style="height:10px">
+          <div class="progress-bar red" id="ef-bar" style="width:0%"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:11px; color:var(--muted)">
+          <span id="ef-saved-label">$0 saved</span>
+          <span id="ef-target-label">Target: $0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goals List -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title green">💰 Savings Goals</span>
+        <button class="btn btn-outline" style="font-size:11px;padding:5px 10px" onclick="addGoal()">+ Add Goal</button>
+      </div>
+      <div id="goals-list"></div>
+    </div>
+  </div>
+
+  <!-- Goals detail table -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title green">📋 All Goals Detail</span>
+      <span style="font-size:11px;color:var(--muted)">Total weekly savings: <strong id="total-weekly-savings" style="color:var(--green)">$0.00</strong></span>
+    </div>
+    <div class="scroll-wrap">
+    <table class="data-table">
+      <colgroup>
+        <col style="min-width:150px">
+        <col style="width:105px">
+        <col style="width:115px">
+        <col style="width:105px">
+        <col style="width:85px">
+        <col style="width:105px">
+        <col style="width:125px">
+        <col style="min-width:130px">
+        <col style="width:30px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Goal Name</th>
+          <th class="right">Weekly Save</th>
+          <th class="right">Amount Saved</th>
+          <th class="right">Target</th>
+          <th class="right">% Done</th>
+          <th class="center">Paychecks Left</th>
+          <th>Target Date</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="goals-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DEBT TRACKER ═══ -->
+<div class="page" id="page-debt">
+  <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px">
+    <label style="font-size:13px; font-weight:600;">Payoff Strategy:</label>
+    <select id="debt-strategy" class="select-input" style="width:300px;max-width:100%" onchange="recalc()">
+      <option value="avalanche">🏔 Avalanche (Highest Rate First)</option>
+      <option value="snowball">⛄ Snowball (Lowest Balance First)</option>
+    </select>
+    <span id="strategy-tip" style="font-size:11px; color:var(--muted); font-style:italic"></span>
+  </div>
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpi-card red">
+      <div class="kpi-label">Total Debt</div>
+      <div class="kpi-value" id="debt-total">$0</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Total Min. Payments</div>
+      <div class="kpi-value" id="debt-mins">$0</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Monthly Interest Cost</div>
+      <div class="kpi-value" id="debt-interest">$0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title red">💳 Debt Payoff Tracker</span>
+      <button class="btn btn-outline" style="font-size:11px;padding:5px 10px" onclick="addDebt()">+ Add Debt</button>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="data-table" style="min-width:1100px">
+      <colgroup>
+        <col style="width:160px">
+        <col style="width:110px">
+        <col style="width:105px">
+        <col style="width:90px">
+        <col style="width:110px">
+        <col style="width:105px">
+        <col style="width:115px">
+        <col style="width:110px">
+        <col style="width:100px">
+        <col style="width:70px">
+        <col style="min-width:140px">
+        <col style="width:32px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Debt Name</th>
+          <th class="right">Balance</th>
+          <th class="right">Min Payment</th>
+          <th class="right">APR</th>
+          <th class="right">Extra Payment</th>
+          <th class="right">Total Payment</th>
+          <th class="right">Monthly Interest</th>
+          <th class="center">Months Left</th>
+          <th class="center">Payoff Date</th>
+          <th class="center">Priority</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="debt-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="page" id="page-settings">
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title blue">⚙️ Personal Settings</span>
+      </div>
+      <div class="scroll-wrap">
+      <table class="data-table">
+        <tbody>
+          <tr><td style="width:200px; font-weight:600">Your Name</td><td><input class="text-input" id="set-name" placeholder="Your name" oninput="saveAll()"></td></tr>
+          <tr><td style="font-weight:600">Pay Frequency</td><td>
+            <select id="set-payfreq" class="select-input" onchange="saveAll()">
+              <option value="weekly">Weekly (52/yr)</option>
+              <option value="biweekly">Bi-Weekly (26/yr)</option>
+              <option value="semimonthly">Semi-Monthly (24/yr)</option>
+            </select>
+          </td></tr>
+          <tr><td style="font-weight:600">Tax Filing Status</td><td>
+            <select id="set-taxstatus" class="select-input" onchange="saveAll()">
+              <option>Single</option>
+              <option>Married Filing Jointly</option>
+              <option>Married Filing Separately</option>
+              <option>Head of Household</option>
+            </select>
+          </td></tr>
+          <tr><td style="font-weight:600">State</td><td><input class="text-input" id="set-state" placeholder="e.g. TX" oninput="saveAll()"></td></tr>
+          <tr><td style="font-weight:600">Emergency Fund Target (months)</td><td>
+            <select id="set-ef-months" class="select-input" onchange="recalc()">
+              <option value="3">3 months</option>
+              <option value="6" selected>6 months (recommended)</option>
+              <option value="9">9 months</option>
+              <option value="12">12 months</option>
+            </select>
+          </td></tr>
+          <tr><td style="font-weight:600">Monthly Expense Target</td><td><input class="num-input" id="set-exp-target" placeholder="0.00" oninput="saveAll()"></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title amber">🎨 Color Legend</span>
+      </div>
+      <div class="scroll-wrap">
+      <table class="data-table">
+        <tbody>
+          <tr><td><span style="color:var(--sky); font-weight:700; font-family:var(--mono)">Blue text</span></td><td>Your input fields — enter data here</td></tr>
+          <tr><td><span style="color:var(--muted); font-weight:700; font-family:var(--mono)">Gray text</span></td><td>Auto-calculated — do not edit</td></tr>
+          <tr><td><span class="pill green">✅ On Track</span></td><td>Spending within budget</td></tr>
+          <tr><td><span class="pill amber">⚠️ Watch</span></td><td>Within 10% of limit</td></tr>
+          <tr><td><span class="pill red">🔴 Over</span></td><td>Exceeded budget</td></tr>
+          <tr><td><span style="color:var(--coral); font-weight:700">#1 Priority</span></td><td>Attack this debt first</td></tr>
+          <tr><td><span style="color:var(--gold); font-weight:700">#2 Priority</span></td><td>Next debt in queue</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div style="padding:16px; border-top:1px solid var(--border)">
+        <div style="font-size:12px; color:var(--muted); margin-bottom:12px; font-weight:600">DATA MANAGEMENT</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveAll()">💾 Save All Data</button>
+          <button class="btn btn-outline" onclick="exportData()">📤 Export JSON</button>
+          <button class="btn btn-danger" onclick="clearAll()">🗑 Clear All Data</button>
+        </div>
+        <div style="font-size:11px; color:var(--muted); margin-top:10px">Data saves to your browser. Export JSON to back it up.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ NET WORTH ═══ -->
+<div class="page" id="page-networth">
+  <div class="nw-hero card" style="margin-bottom:18px">
+    <div class="nw-number" id="nw-total">$0</div>
+    <div class="nw-label">Net Worth</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px" id="nw-subtitle">Total Assets minus Total Liabilities</div>
+  </div>
+
+  <div class="section-grid">
+    <!-- Assets -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title green">📈 Assets</span>
+        <span style="font-family:var(--mono);font-size:13px;color:var(--sage);font-weight:700" id="nw-assets-total">$0.00</span>
+      </div>
+      <div class="scroll-wrap">
+      <table class="data-table">
+        <colgroup><col style="min-width:180px"><col style="width:130px"><col style="min-width:120px"></colgroup>
+        <thead><tr><th>Asset</th><th class="right">Current Value</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Checking Account(s)</td><td><input class="num-input" id="nw-checking" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="All checking balances"></td></tr>
+          <tr><td>Savings Account(s)</td><td><input class="num-input" id="nw-savings-acc" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="HYSA, regular savings"></td></tr>
+          <tr><td>Emergency Fund</td><td><input class="num-input formula" id="nw-ef-mirror" readonly title="Pulls from Goals tab"></td><td><input class="notes-field" placeholder="Auto-pulled from Goals tab"></td></tr>
+          <tr><td>401k / Retirement</td><td><input class="num-input" id="nw-401k" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="Vested balance"></td></tr>
+          <tr><td>IRA / Roth IRA</td><td><input class="num-input" id="nw-ira" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="Current balance"></td></tr>
+          <tr><td>Brokerage / Stocks</td><td><input class="num-input" id="nw-brokerage" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="Taxable investment accounts"></td></tr>
+          <tr><td>Home / Real Estate</td><td><input class="num-input" id="nw-home" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="Current market value"></td></tr>
+          <tr><td>Vehicle(s)</td><td><input class="num-input" id="nw-vehicle" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="KBB or estimated value"></td></tr>
+          <tr><td>Other Assets</td><td><input class="num-input" id="nw-other-asset" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="Business equity, crypto, etc."></td></tr>
+          <tr class="total-row"><td><strong>Total Assets</strong></td><td><input class="num-input formula" id="nw-assets-sum" readonly></td><td></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <!-- Liabilities -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title red">📉 Liabilities</span>
+        <span style="font-family:var(--mono);font-size:13px;color:var(--coral);font-weight:700" id="nw-liab-total">$0.00</span>
+      </div>
+      <div class="scroll-wrap">
+      <table class="data-table">
+        <colgroup><col style="min-width:180px"><col style="width:130px"><col style="min-width:120px"></colgroup>
+        <thead><tr><th>Liability</th><th class="right">Balance Owed</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Mortgage</td><td><input class="num-input" id="nw-mortgage" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="Remaining principal"></td></tr>
+          <tr><td>Auto Loan(s)</td><td><input class="num-input" id="nw-auto-loan" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="Total remaining balance"></td></tr>
+          <tr><td>Student Loans</td><td><input class="num-input" id="nw-student" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder="Federal + private combined"></td></tr>
+          <tr><td>Credit Cards</td><td><input class="num-input formula" id="nw-cc-mirror" readonly title="Auto-pulled from Debt Tracker"></td><td><input class="notes-field" placeholder="Pulls from Debt Tracker"></td></tr>
+          <tr><td>Personal Loans</td><td><input class="num-input" id="nw-personal-loan" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder=""></td></tr>
+          <tr><td>Medical Debt</td><td><input class="num-input" id="nw-medical" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder=""></td></tr>
+          <tr><td>Other Liabilities</td><td><input class="num-input" id="nw-other-liab" placeholder="0.00" oninput="recalcNW()"></td><td><input class="notes-field" placeholder=""></td></tr>
+          <tr class="total-row"><td><strong>Total Liabilities</strong></td><td><input class="num-input formula" id="nw-liab-sum" readonly></td><td></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title amber">📅 Net Worth History</span>
+      <button class="btn btn-outline" style="font-size:11px;padding:5px 10px" onclick="snapshotNW()">📸 Snapshot Today</button>
+    </div>
+    <div class="scroll-wrap">
+    <table class="data-table" id="nw-history-table">
+      <colgroup><col style="width:130px"><col style="width:120px"><col style="width:120px"><col style="width:120px"><col style="min-width:120px"></colgroup>
+      <thead><tr><th>Date</th><th class="right">Assets</th><th class="right">Liabilities</th><th class="right">Net Worth</th><th>Change</th></tr></thead>
+      <tbody id="nw-history-body">
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);font-style:italic;padding:20px">Click "Snapshot Today" to record your net worth. Do this monthly to track progress.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BILL CALENDAR ═══ -->
+<div class="page" id="page-calendar">
+  <div class="alert info" style="margin-bottom:16px">Bill amounts and due dates pull from your Fixed Expenses tab. Set payday(s) below and the calendar marks them automatically.</div>
+
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:12px;font-weight:600;color:var(--cream-2)">Payday 1 (day of month):</label>
+      <input type="number" id="cal-payday1" class="num-input" value="15" min="1" max="31" style="width:60px" oninput="buildCalendar()">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:12px;font-weight:600;color:var(--cream-2)">Payday 2 (if bi-weekly/0 = none):</label>
+      <input type="number" id="cal-payday2" class="num-input" value="30" min="0" max="31" style="width:60px" oninput="buildCalendar()">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:12px;font-weight:600;color:var(--cream-2)">Net Pay per check:</label>
+      <input class="num-input formula" id="cal-net-mirror" readonly style="width:110px" title="Pulls from Income tab">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cal-month-nav">
+      <button class="cal-nav-btn" onclick="changeCalMonth(-1)">‹</button>
+      <div class="cal-month-title" id="cal-month-title">January 2025</div>
+      <button class="cal-nav-btn" onclick="changeCalMonth(1)">›</button>
+    </div>
+    <div class="cal-grid" id="cal-grid">
+      <div class="cal-day-header">Sun</div>
+      <div class="cal-day-header">Mon</div>
+      <div class="cal-day-header">Tue</div>
+      <div class="cal-day-header">Wed</div>
+      <div class="cal-day-header">Thu</div>
+      <div class="cal-day-header">Fri</div>
+      <div class="cal-day-header">Sat</div>
+    </div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--sage)30;border:1px solid var(--sage)"></div>Payday</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#1e2a1e"></div>Housing</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#18202a"></div>Utilities</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#2a2218"></div>Transport</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#22182a"></div>Subscriptions</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#2a1818"></div>Health</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#2a1a14"></div>Debt</div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:24px;flex-wrap:wrap">
+      <div style="font-size:12px">Total bills this month: <strong id="cal-month-total" style="font-family:var(--mono);color:var(--coral)">$0.00</strong></div>
+      <div style="font-size:12px">Income this month: <strong id="cal-month-income" style="font-family:var(--mono);color:var(--sage)">$0.00</strong></div>
+      <div style="font-size:12px">Remaining after bills: <strong id="cal-month-remain" style="font-family:var(--mono)">$0.00</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 50/30/20 ═══ -->
+<div class="page" id="page-rule503020">
+  <div class="alert info" style="margin-bottom:16px">The 50/30/20 rule: 50% on needs (fixed + essentials), 30% on wants (dining, entertainment, fun), 20% on savings + debt payoff. These targets are guidelines — adjust to your situation.</div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-header">
+      <span class="card-title gold">⚖️ Your 50/30/20 Breakdown</span>
+      <span style="font-size:11px;color:var(--muted)">Based on your current paycheck net income</span>
+    </div>
+    <div class="rule-grid">
+      <div class="rule-col" style="border-right:1px solid var(--border)">
+        <div class="rule-label">Needs (Target: 50%)</div>
+        <div class="rule-pct-big" id="rule-needs-pct" style="color:var(--sky)">0%</div>
+        <div class="rule-target" id="rule-needs-amt">$0.00 of $0.00</div>
+        <div id="rule-needs-badge"></div>
+      </div>
+      <div class="rule-col" style="border-right:1px solid var(--border)">
+        <div class="rule-label">Wants (Target: 30%)</div>
+        <div class="rule-pct-big" id="rule-wants-pct" style="color:var(--lavender)">0%</div>
+        <div class="rule-target" id="rule-wants-amt">$0.00 of $0.00</div>
+        <div id="rule-wants-badge"></div>
+      </div>
+      <div class="rule-col">
+        <div class="rule-label">Savings + Debt (Target: 20%)</div>
+        <div class="rule-pct-big" id="rule-save-pct" style="color:var(--sage)">0%</div>
+        <div class="rule-target" id="rule-save-amt">$0.00 of $0.00</div>
+        <div id="rule-save-badge"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-header"><span class="card-title blue">⚙️ Customize Category Assignments</span></div>
+      <div style="padding:14px 20px">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:12px">Variable expense categories are assigned to Needs or Wants below. Fixed expenses always count as Needs.</p>
+        <div class="scroll-wrap">
+        <table class="data-table" id="rule-cat-table">
+          <thead><tr><th>Variable Category</th><th class="center">Needs</th><th class="center">Wants</th></tr></thead>
+          <tbody id="rule-cat-tbody"></tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title amber">📊 Spending Bar Breakdown</span></div>
+      <div class="rule-progress-stack" id="rule-bars" style="padding-top:16px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TRANSACTIONS ═══ -->
+<div class="page" id="page-transactions">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title blue">📝 Transaction Log</span>
+      <button class="btn btn-primary" style="font-size:11px;padding:6px 12px" onclick="addTxn()">+ Add Transaction</button>
+    </div>
+    <div class="txn-toolbar">
+      <input type="text" id="txn-search" placeholder="Search transactions..." style="width:180px" oninput="filterTxns()">
+      <select id="txn-filter-cat" onchange="filterTxns()" style="width:150px">
+        <option value="">All Categories</option>
+      </select>
+      <select id="txn-filter-type" onchange="filterTxns()" style="width:120px">
+        <option value="">All Types</option>
+        <option value="expense">Expense</option>
+        <option value="income">Income</option>
+      </select>
+      <input type="date" id="txn-filter-from" onchange="filterTxns()" title="From date">
+      <span style="font-size:11px;color:var(--muted)">to</span>
+      <input type="date" id="txn-filter-to" onchange="filterTxns()" title="To date">
+      <button class="btn btn-ghost" onclick="clearTxnFilters()" style="font-size:11px;padding:5px 10px">Clear</button>
+    </div>
+    <div class="txn-summary-bar">
+      <div class="txn-sum-item"><span class="txn-sum-label">Total In:</span><span class="txn-sum-val" id="txn-total-in" style="color:var(--sage)">$0.00</span></div>
+      <div class="txn-sum-item"><span class="txn-sum-label">Total Out:</span><span class="txn-sum-val" id="txn-total-out" style="color:var(--coral)">$0.00</span></div>
+      <div class="txn-sum-item"><span class="txn-sum-label">Net:</span><span class="txn-sum-val" id="txn-net">$0.00</span></div>
+      <div class="txn-sum-item"><span class="txn-sum-label">Transactions:</span><span class="txn-sum-val" id="txn-count" style="color:var(--muted)">0</span></div>
+    </div>
+    <div class="scroll-wrap">
+    <table class="data-table" style="min-width:800px">
+      <colgroup>
+        <col style="width:110px"><col style="min-width:160px"><col style="width:120px">
+        <col style="width:100px"><col style="width:90px"><col style="min-width:140px"><col style="width:30px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Date</th><th>Description</th><th>Category</th>
+          <th class="right">Amount</th><th class="center">Type</th><th>Notes</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="txn-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SINKING FUNDS ═══ -->
+<div class="page" id="page-sinking">
+  <div class="alert info" style="margin-bottom:16px">Sinking funds are for planned future expenses — car registration, holiday gifts, annual subscriptions. Set a target amount and date; the tracker calculates how much to set aside each paycheck.</div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-header">
+      <span class="card-title gold">💼 Sinking Funds Overview</span>
+      <button class="btn btn-outline" style="font-size:11px;padding:5px 10px" onclick="addSinkingFund()">+ Add Fund</button>
+    </div>
+    <div style="display:flex;gap:24px;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <div style="font-size:12px">Total saved across all funds: <strong id="sf-total-saved" style="font-family:var(--mono);color:var(--sage)">$0.00</strong></div>
+      <div style="font-size:12px">Total per-paycheck contribution: <strong id="sf-total-per-pay" style="font-family:var(--mono);color:var(--gold)">$0.00</strong></div>
+    </div>
+    <div class="sf-grid" id="sf-cards"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title amber">📋 Sinking Fund Detail</span></div>
+    <div class="scroll-wrap">
+    <table class="data-table" style="min-width:900px">
+      <colgroup>
+        <col style="min-width:160px"><col style="width:110px"><col style="width:110px">
+        <col style="width:110px"><col style="width:90px"><col style="width:100px">
+        <col style="width:125px"><col style="min-width:130px"><col style="width:30px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Fund Name</th><th class="right">Per Paycheck</th><th class="right">Saved So Far</th>
+          <th class="right">Target Amount</th><th class="right">% Done</th><th class="center">Pays Left</th>
+          <th>Target Date</th><th>Notes</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="sf-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHARTS ═══ -->
+<div class="page" id="page-charts">
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-header"><span class="card-title blue">🍩 Spending by Category</span></div>
+      <div class="chart-container" style="height:300px;display:flex;align-items:center;justify-content:center">
+        <canvas id="chart-donut" width="280" height="280"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title amber">📊 Budget vs Actual — Variable</span></div>
+      <div class="chart-container" style="height:300px">
+        <canvas id="chart-bar-var"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-grid" style="margin-top:18px">
+    <div class="card">
+      <div class="card-header"><span class="card-title green">📈 Income Allocation</span></div>
+      <div class="chart-container" style="height:260px;display:flex;align-items:center;justify-content:center">
+        <canvas id="chart-income-alloc" width="260" height="260"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title red">💳 Debt Payoff Timeline</span></div>
+      <div class="chart-container" style="height:260px">
+        <canvas id="chart-debt-timeline"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── Chart.js loaded lazily ──
+let Chart;
+
+// ── STATE ──────────────────────────────────────────────────────────────
+
+const defaultGoals = [
+  { name: "Vacation Fund",       weekly: "", saved: "", target: "", date: "", notes: "" },
+  { name: "New Car / Down Payment", weekly: "", saved: "", target: "", date: "", notes: "" },
+  { name: "Holiday / Gift Fund", weekly: "", saved: "", target: "", date: "", notes: "" },
+  { name: "Education / Courses", weekly: "", saved: "", target: "", date: "", notes: "" },
+];
+
+const defaultDebts = [
+  { name: "Credit Card 1", balance: "", min: "", apr: "", extra: "", notes: "" },
+  { name: "Auto Loan",     balance: "", min: "", apr: "", extra: "", notes: "" },
+  { name: "Student Loan",  balance: "", min: "", apr: "", extra: "", notes: "" },
+];
+
+const fixedExpenseDefs = [
+  { section: "🏠 Housing" },
+  { label: "Rent / Mortgage",                  id: "fix-rent",    due: "" },
+  { label: "Renter's/Homeowner's Insurance",   id: "fix-ins",     due: "" },
+  { label: "HOA Fees",                          id: "fix-hoa",     due: "" },
+  { section: "🔌 Utilities" },
+  { label: "Electric",                          id: "fix-elec",    due: "" },
+  { label: "Gas / Heating",                     id: "fix-gas",     due: "" },
+  { label: "Water & Sewer",                     id: "fix-water",   due: "" },
+  { label: "Internet",                          id: "fix-inet",    due: "" },
+  { label: "Phone (Cell)",                      id: "fix-phone",   due: "" },
+  { section: "🚗 Transportation" },
+  { label: "Car Payment",                       id: "fix-car",     due: "" },
+  { label: "Car Insurance",                     id: "fix-car-ins", due: "" },
+  { section: "📺 Subscriptions" },
+  { label: "Netflix / Streaming",               id: "fix-stream",  due: "" },
+  { label: "Spotify / Music",                   id: "fix-music",   due: "" },
+  { label: "Gym / Fitness",                     id: "fix-gym",     due: "" },
+  { label: "Amazon Prime / Membership",         id: "fix-amazon",  due: "" },
+  { label: "Software / Apps",                   id: "fix-sw",      due: "" },
+  { section: "🏥 Insurance & Health" },
+  { label: "Health Insurance (out-of-pocket)",  id: "fix-health",  due: "" },
+  { label: "Life Insurance",                    id: "fix-life",    due: "" },
+  { label: "Dental / Vision",                   id: "fix-dent",    due: "" },
+  { section: "📦 Other Fixed" },
+  { label: "Childcare / Daycare",               id: "fix-child",   due: "" },
+  { label: "Storage Unit",                      id: "fix-stor",    due: "" },
+  { label: "Other Fixed Expense",               id: "fix-other",   due: "" },
+];
+
+const varExpenseDefs = [
+  { section: "🛒 Food & Dining" },
+  { label: "Groceries",              id: "var-groc",   budget: 150 },
+  { label: "Dining Out",             id: "var-dine",   budget: 50  },
+  { label: "Coffee / Drinks",        id: "var-cof",    budget: 20  },
+  { label: "Meal Delivery",          id: "var-del",    budget: 30  },
+  { section: "⛽ Transportation" },
+  { label: "Gas / Fuel",             id: "var-gas",    budget: 60  },
+  { label: "Parking / Tolls",        id: "var-park",   budget: 15  },
+  { label: "Rideshare",              id: "var-ride",   budget: 20  },
+  { section: "🏥 Health & Personal" },
+  { label: "Medical / Pharmacy",     id: "var-med",    budget: 25  },
+  { label: "Personal Care",          id: "var-care",   budget: 15  },
+  { section: "🏠 Home & Lifestyle" },
+  { label: "Household Supplies",     id: "var-home",   budget: 20  },
+  { label: "Home Maintenance",       id: "var-maint",  budget: 15  },
+  { section: "🎉 Entertainment" },
+  { label: "Entertainment / Events", id: "var-ent",    budget: 30  },
+  { label: "Hobbies / Recreation",   id: "var-hob",    budget: 20  },
+  { label: "Clothing",               id: "var-cloth",  budget: 25  },
+  { label: "Gifts / Donations",      id: "var-gift",   budget: 15  },
+  { label: "Kids / Children",        id: "var-kids",   budget: 0   },
+  { label: "Pet Expenses",           id: "var-pet",    budget: 20  },
+  { label: "Other / Misc",           id: "var-misc",   budget: 20  },
+];
+
+let goals = JSON.parse(JSON.stringify(defaultGoals));
+let debts = JSON.parse(JSON.stringify(defaultDebts));
+
+// ── HELPERS ────────────────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id);
+const v  = id => parseFloat($( id)?.value || 0) || 0;
+const fmt = n => isNaN(n) ? "$0.00" : "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = n => (isNaN(n) || !isFinite(n)) ? "0.0%" : (n * 100).toFixed(1) + "%";
+
+function setVal(id, value) {
+  const el = $(id);
+  if (!el) return;
+  let display = "";
+  if (typeof value === "string") {
+    display = value;
+  } else if (typeof value === "number") {
+    if (isNaN(value) || !isFinite(value)) {
+      display = "";
+    } else {
+      // Always show full number with cents — toFixed(2) guarantees "1234.56" not "1234.6"
+      display = value.toFixed(2);
+    }
+  } else {
+    display = value ?? "";
+  }
+  el.value = display;
+  // Also set title so hover shows full value if column is narrow
+  el.title = display;
+}
+
+function addMonths(date, months) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
+// ── FIXED EXPENSES TABLE ───────────────────────────────────────────────
+
+function buildFixedTable() {
+  const tbody = $("fixed-tbody");
+  tbody.innerHTML = "";
+  fixedExpenseDefs.forEach(def => {
+    const tr = document.createElement("tr");
+    if (def.section) {
+      tr.className = "section-row";
+      tr.innerHTML = `<td colspan="6">${def.section}</td>`;
+    } else {
+      tr.innerHTML = `
+        <td>${def.label}</td>
+        <td><input class="num-input" style="width:100%;text-align:center;box-sizing:border-box" id="${def.id}-due" placeholder="1-31" min="1" max="31" type="number" oninput="recalc()"></td>
+        <td><input class="num-input" id="${def.id}" placeholder="0.00" oninput="recalc()"></td>
+        <td><input class="num-input formula" id="${def.id}-wk" readonly></td>
+        <td><input class="num-input formula" id="${def.id}-bwk" readonly></td>
+        <td><input class="notes-field" id="${def.id}-note" placeholder="Optional note..."></td>
+      `;
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// ── VARIABLE EXPENSES TABLE ────────────────────────────────────────────
+
+function buildVarTable() {
+  const tbody = $("var-tbody");
+  tbody.innerHTML = "";
+  varExpenseDefs.forEach(def => {
+    const tr = document.createElement("tr");
+    if (def.section) {
+      tr.className = "section-row";
+      tr.innerHTML = `<td colspan="6">${def.section}</td>`;
+    } else {
+      tr.innerHTML = `
+        <td>${def.label}</td>
+        <td><input class="num-input" id="${def.id}-bud" value="${def.budget || ""}" oninput="recalc()"></td>
+        <td><input class="num-input" id="${def.id}-act" placeholder="0.00" oninput="recalc()"></td>
+        <td><input class="num-input formula" id="${def.id}-var" readonly></td>
+        <td><input class="num-input formula" id="${def.id}-varpct" readonly></td>
+        <td><input class="notes-field" id="${def.id}-note" placeholder="Note..."></td>
+      `;
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// ── GOALS TABLE ────────────────────────────────────────────────────────
+
+function buildGoalsTable() {
+  const tbody = $("goals-tbody");
+  tbody.innerHTML = "";
+  goals.forEach((g, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input class="text-input" value="${g.name}" oninput="goals[${i}].name=this.value; updateGoalCards(); saveAll()"></td>
+      <td><input class="num-input" id="goal-wk-${i}" value="${g.weekly}" placeholder="0.00" oninput="goals[${i}].weekly=this.value; recalc()"></td>
+      <td><input class="num-input" id="goal-sv-${i}" value="${g.saved}" placeholder="0.00" oninput="goals[${i}].saved=this.value; recalc()"></td>
+      <td><input class="num-input" id="goal-tg-${i}" value="${g.target}" placeholder="0.00" oninput="goals[${i}].target=this.value; recalc()"></td>
+      <td><input class="num-input formula" id="goal-pct-${i}" readonly></td>
+      <td style="text-align:center"><input class="num-input formula" id="goal-pays-${i}" readonly style="width:100%;text-align:center"></td>
+      <td><input type="date" class="select-input" id="goal-dt-${i}" value="${g.date}" oninput="goals[${i}].date=this.value; saveAll()" style="width:130px"></td>
+      <td><input class="notes-field" value="${g.notes}" oninput="goals[${i}].notes=this.value; saveAll()"></td>
+      <td><button onclick="removeGoal(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function addGoal() {
+  goals.push({ name: "New Goal", weekly: "", saved: "", target: "", date: "", notes: "" });
+  buildGoalsTable();
+  recalc();
+}
+
+function removeGoal(i) {
+  goals.splice(i, 1);
+  buildGoalsTable();
+  recalc();
+}
+
+function updateGoalCards() {
+  const list = $("goals-list");
+  list.innerHTML = "";
+  goals.forEach((g, i) => {
+    const saved  = parseFloat(g.saved)  || 0;
+    const target = parseFloat(g.target) || 1;
+    const pct    = Math.min(saved / target, 1);
+    const weekly = parseFloat(g.weekly) || 0;
+    const pays   = weekly > 0 ? Math.ceil((target - saved) / weekly) : "—";
+    const colors = ["green","blue","amber","purple","red"];
+    const color  = colors[i % colors.length];
+
+    const div = document.createElement("div");
+    div.className = "goal-row";
+    div.innerHTML = `
+      <div class="goal-meta">
+        <span class="goal-name">${g.name || "Unnamed Goal"}</span>
+        <span class="goal-pct">${(pct * 100).toFixed(0)}%</span>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar ${color}" style="width:${pct*100}%"></div></div>
+      <div class="goal-amounts">
+        <span>${fmt(saved)} saved</span>
+        <span>Target: ${fmt(target)}</span>
+      </div>
+      <div style="font-size:11px; color:var(--muted)">
+        Weekly: ${fmt(parseFloat(g.weekly)||0)} &nbsp;|&nbsp; ${typeof pays === "number" ? pays + " paychecks left" : "Set weekly amount"}
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ── DEBT TABLE ─────────────────────────────────────────────────────────
+
+function buildDebtTable() {
+  const tbody = $("debt-tbody");
+  tbody.innerHTML = "";
+  debts.forEach((d, i) => {
+    const tr = document.createElement("tr");
+    tr.id = `debt-row-${i}`;
+    tr.innerHTML = `
+      <td><input class="text-input" value="${d.name}" oninput="debts[${i}].name=this.value; saveAll()"></td>
+      <td><input class="num-input" id="debt-bal-${i}" value="${d.balance}" placeholder="0.00" oninput="debts[${i}].balance=this.value; recalc()"></td>
+      <td><input class="num-input" id="debt-min-${i}" value="${d.min}" placeholder="0.00" oninput="debts[${i}].min=this.value; recalc()"></td>
+      <td><input class="num-input" id="debt-apr-${i}" value="${d.apr}" placeholder="e.g. 18.99" oninput="debts[${i}].apr=this.value; recalc()" style="color:var(--red)"></td>
+      <td><input class="num-input" id="debt-extra-${i}" value="${d.extra}" placeholder="0.00" oninput="debts[${i}].extra=this.value; recalc()"></td>
+      <td><input class="num-input formula" id="debt-total-${i}" readonly></td>
+      <td><input class="num-input formula" id="debt-int-${i}" readonly style="color:var(--red)"></td>
+      <td style="text-align:center"><input class="num-input formula" id="debt-months-${i}" readonly style="width:100%;text-align:center"></td>
+      <td style="text-align:center"><input class="num-input formula" id="debt-date-${i}" readonly style="width:100%;text-align:center;font-size:12px"></td>
+      <td style="text-align:center"><strong id="debt-priority-${i}">—</strong></td>
+      <td><input class="notes-field" value="${d.notes||''}" oninput="debts[${i}].notes=this.value; saveAll()"></td>
+      <td><button onclick="removeDebt(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function addDebt() {
+  debts.push({ name: "New Debt", balance: "", min: "", apr: "", extra: "", notes: "" });
+  buildDebtTable();
+  recalc();
+}
+
+function removeDebt(i) {
+  debts.splice(i, 1);
+  buildDebtTable();
+  recalc();
+}
+
+// ── MAIN RECALC ─────────────────────────────────────────────────────────
+
+function recalc() {
+  // ─ Income ─
+  const gross   = v("inc-gross");
+  const fedTax  = v("inc-fed");
+  const statTax = v("inc-state");
+  // Read user-editable rates — pre-filled with 2024 defaults (6.2% SS, 1.45% Medicare)
+  // If the user earns over $200k, Medicare rate should be 2.35% (extra 0.9% surtax)
+  const ssRate  = (parseFloat(document.getElementById("inc-ss-rate")?.value)  || 6.20) / 100;
+  const medRate = (parseFloat(document.getElementById("inc-med-rate")?.value) || 1.45) / 100;
+  const ss      = gross * ssRate;
+  const med     = gross * medRate;
+
+  // Keep the rate display labels in sync
+  const ssRateDisp  = document.getElementById("ss-rate-display");
+  const medRateDisp = document.getElementById("med-rate-display");
+  if (ssRateDisp)  ssRateDisp.textContent  = (ssRate  * 100).toFixed(2) + "%";
+  if (medRateDisp) medRateDisp.textContent = (medRate * 100).toFixed(2) + "%";
+  const health  = v("inc-health");
+  const r401k   = v("inc-401k");
+  const otherD  = v("inc-other-ded");
+  const netPay  = gross - fedTax - statTax - ss - med - health - r401k - otherD;
+
+  setVal("inc-ss",  ss);
+  setVal("inc-med", med);
+  setVal("inc-net", netPay > 0 ? netPay : 0);
+
+  const gPrev   = v("inc-gross-prev");
+  const hPrev   = v("inc-health-prev");
+  const r401Prev= v("inc-401k-prev");
+  const netPrev = gPrev - v("inc-fed-prev") - v("inc-state-prev") - gPrev*ssRate - gPrev*medRate - hPrev - r401Prev;
+  setVal("inc-net-prev", netPrev > 0 ? netPrev : 0);
+
+  // Averages
+  const pairs = [
+    ["inc-gross-avg",  "inc-gross",  "inc-gross-prev"],
+    ["inc-fed-avg",    "inc-fed",    "inc-fed-prev"],
+    ["inc-state-avg",  "inc-state",  "inc-state-prev"],
+    ["inc-health-avg", "inc-health", "inc-health-prev"],
+    ["inc-401k-avg",   "inc-401k",   "inc-401k-prev"],
+  ];
+  pairs.forEach(([avgId, aId, bId]) => {
+    const a = v(aId);
+    const b = bId ? v(bId) : 0;
+    const avg = b > 0 ? (a + b) / 2 : a;
+    setVal(avgId, avg);
+  });
+
+  const addlIncome = v("inc-side") + v("inc-rent") + v("inc-gig") + v("inc-invest") + v("inc-other");
+  setVal("inc-addl-total", addlIncome);
+
+  // ─ Fixed ─
+  let fixTotal = 0;
+  fixedExpenseDefs.forEach(def => {
+    if (!def.id) return;
+    const monthly = v(def.id);
+    fixTotal += monthly;
+    setVal(`${def.id}-wk`,  monthly / 4.33);
+    setVal(`${def.id}-bwk`, monthly / 2.17);
+  });
+  $("fix-total-display").textContent = fmt(fixTotal);
+
+  // ─ Variable ─
+  let varBudget = 0, varActual = 0;
+  varExpenseDefs.forEach(def => {
+    if (!def.id) return;
+    const bud = v(`${def.id}-bud`);
+    const act = v(`${def.id}-act`);
+    varBudget += bud;
+    varActual += act;
+    const varD = act - bud;
+    const varP = bud > 0 ? varD / bud : 0;
+    const varEl   = $(`${def.id}-var`);
+    const varPctEl = $(`${def.id}-varpct`);
+    if (varEl) { varEl.value = varD.toFixed(2); varEl.style.color = varD > 0 ? "var(--red)" : "var(--green)"; }
+    if (varPctEl) { varPctEl.value = fmtPct(varP); varPctEl.style.color = varD > 0 ? "var(--red)" : "var(--green)"; }
+  });
+
+  // Variable summary
+  const varSumDiv = $("var-summary-rows");
+  if (varSumDiv) {
+    varSumDiv.innerHTML = `
+      <div class="ytd-row"><span class="ytd-label">Total Budget</span><span class="ytd-value" style="color:var(--blue)">${fmt(varBudget)}</span></div>
+      <div class="ytd-row"><span class="ytd-label">Total Actual</span><span class="ytd-value" style="color:${varActual > varBudget ? "var(--red)" : "var(--green)"}">${fmt(varActual)}</span></div>
+      <div class="ytd-row"><span class="ytd-label">Variance</span><span class="ytd-value" style="color:${varActual - varBudget > 0 ? "var(--red)" : "var(--green)"}">${fmt(varActual - varBudget)}</span></div>
+      <div class="ytd-row"><span class="ytd-label">% of Budget Used</span><span class="ytd-value">${varBudget > 0 ? fmtPct(varActual/varBudget) : "—"}</span></div>
+    `;
+  }
+
+  // ─ Savings ─
+  const efSaved   = v("ef-saved");
+  const efTarget  = v("ef-target");
+  const efPct     = efTarget > 0 ? efSaved / efTarget : 0;
+  setVal("ef-pct", (efPct * 100).toFixed(1) + "%");
+
+  const monthsFixed = fixTotal > 0 ? efSaved / fixTotal : 0;
+  setVal("ef-months", monthsFixed.toFixed(1) + " months");
+
+  const efBar = $("ef-bar");
+  if (efBar) { efBar.style.width = Math.min(efPct * 100, 100) + "%"; }
+  $("ef-saved-label").textContent = fmt(efSaved) + " saved";
+  $("ef-target-label").textContent = "Target: " + fmt(efTarget);
+
+  let totalWeeklySavings = v("ef-weekly");
+  goals.forEach((g, i) => {
+    const saved  = parseFloat(g.saved)  || 0;
+    const target = parseFloat(g.target) || 0;
+    const weekly = parseFloat(g.weekly) || 0;
+    const pct    = target > 0 ? saved / target : 0;
+    const pays   = weekly > 0 && target > saved ? Math.ceil((target - saved) / weekly) : 0;
+    totalWeeklySavings += weekly;
+
+    const pctEl  = $(`goal-pct-${i}`);
+    const paysEl = $(`goal-pays-${i}`);
+    if (pctEl)  pctEl.value  = (pct * 100).toFixed(1) + "%";
+    if (paysEl) paysEl.value = pays > 0 ? pays : (saved >= target && target > 0 ? "✓ Done" : "—");
+  });
+  $("total-weekly-savings").textContent = fmt(totalWeeklySavings);
+  updateGoalCards();
+
+  // ─ Debt ─
+  const strategy = $("debt-strategy")?.value || "avalanche";
+  $("strategy-tip").textContent = strategy === "avalanche"
+    ? "Pay minimums on all, then throw every extra dollar at the highest-rate debt first."
+    : "Pay minimums on all, then throw extra at the smallest balance. Builds psychological momentum.";
+
+  let debtTotal = 0, debtMins = 0, debtInt = 0;
+  const debtData = debts.map((d, i) => {
+    const bal   = parseFloat(d.balance) || 0;
+    const min   = parseFloat(d.min)     || 0;
+    const apr   = (parseFloat(d.apr)    || 0) / 100;
+    const extra = parseFloat(d.extra)   || 0;
+    const total = min + extra;
+    const mInt  = bal * (apr / 12);
+    let months  = 0;
+    if (bal > 0 && total > mInt) {
+      months = Math.ceil(-Math.log(1 - (apr/12 * bal) / total) / Math.log(1 + apr/12));
+      if (!isFinite(months) || isNaN(months)) months = 999;
+    } else if (bal > 0) {
+      months = 999;
+    }
+
+    debtTotal += bal;
+    debtMins  += min;
+    debtInt   += mInt;
+
+    setVal(`debt-total-${i}`,  total);
+    setVal(`debt-int-${i}`,    mInt);
+    const mEl = $(`debt-months-${i}`);
+    if (mEl) mEl.value = months < 999 ? months : "999+";
+    const dEl = $(`debt-date-${i}`);
+    if (dEl) dEl.value = months < 999 && months > 0 ? addMonths(new Date(), months) : "—";
+
+    return { i, bal, apr, strategy };
+  });
+
+  // Priority ranking
+  const sorted = [...debtData].sort((a, b) => {
+    if (strategy === "avalanche") return b.apr - a.apr;
+    return a.bal - b.bal;
+  });
+  sorted.forEach((d, rank) => {
+    const el = $(`debt-priority-${d.i}`);
+    if (!el) return;
+    el.textContent = "#" + (rank + 1);
+    el.className = rank === 0 ? "priority-1" : rank === 1 ? "priority-2" : "priority-3";
+  });
+
+  $("debt-total").textContent    = fmt(debtTotal);
+  $("debt-mins").textContent     = fmt(debtMins);
+  $("debt-interest").textContent = fmt(debtInt);
+
+  // ─ Dashboard ─
+  const paychecks    = parseInt($("ytd-paychecks")?.value) || 1;
+  const totalFixed   = fixTotal / 4.33;
+  const totalVar     = varActual;
+  const totalExpenses = totalFixed + totalVar;
+  const totalSavings = totalWeeklySavings;
+  const remaining    = netPay - totalFixed - totalVar - totalSavings;
+
+  $("kpi-net").textContent       = fmt(netPay);
+  $("kpi-gross-sub").textContent = "Gross: " + fmt(gross);
+  $("kpi-expenses").textContent  = fmt(totalExpenses);
+  $("kpi-savings").textContent   = fmt(totalSavings);
+  $("kpi-remaining").textContent = fmt(remaining);
+
+  $("kpi-rem-sub").textContent = remaining < 0
+    ? "⚠️ Over budget — cut expenses"
+    : remaining < netPay * 0.1
+    ? "⚠️ Very tight — watch spending"
+    : "✅ Looking good";
+
+  // YTD rows
+  const ytdDiv = $("ytd-rows");
+  if (ytdDiv) {
+    ytdDiv.innerHTML = [
+      ["YTD Gross Income",  fmt(gross * paychecks), "var(--blue)"],
+      ["YTD Net Income",    fmt(netPay * paychecks), "var(--green)"],
+      ["YTD Taxes Paid",    fmt((fedTax + statTax + ss + med) * paychecks), "var(--red)"],  // uses live rates
+      ["YTD Additional",    fmt(addlIncome * paychecks), "var(--amber)"],
+      ["YTD Total Saved",   fmt(totalSavings * paychecks), "var(--green)"],
+    ].map(([label, val, color]) => `
+      <div class="ytd-row">
+        <span class="ytd-label">${label}</span>
+        <span class="ytd-value" style="color:${color}">${val}</span>
+      </div>
+    `).join("");
+  }
+
+  // Budget status table
+  const budgetTable = $("dash-budget-table");
+  if (budgetTable) {
+    const rows = [
+      ["Fixed Expenses", totalFixed, totalFixed],
+      ["Variable Expenses", varBudget, varActual],
+      ["Savings", totalSavings, totalSavings],  // budgeted = actual for savings (you control it)
+      ["Debt Payments", debtMins, debtMins],
+    ];
+    budgetTable.innerHTML = rows.map(([cat, bud, act]) => {
+      const diff  = act - bud;
+      const pct   = bud > 0 ? diff / bud : 0;
+      const status = diff <= 0 ? '<span class="pill green">✅ On Track</span>'
+                  : pct <= 0.1 ? '<span class="pill amber">⚠️ Watch</span>'
+                  : '<span class="pill red">🔴 Over</span>';
+      return `<tr>
+        <td><strong>${cat}</strong></td>
+        <td style="text-align:right;font-family:var(--mono)">${fmt(bud)}</td>
+        <td style="text-align:right;font-family:var(--mono)">${fmt(act)}</td>
+        <td style="text-align:right;font-family:var(--mono);color:${diff>0?"var(--red)":"var(--green)"}">${fmt(diff)}</td>
+        <td style="text-align:center">${status}</td>
+      </tr>`;
+    }).join("") + `<tr class="total-row">
+      <td><strong>TOTAL</strong></td>
+      <td style="text-align:right;font-family:var(--mono)">${fmt(totalFixed+varBudget+totalSavings+debtMins)}</td>
+      <td style="text-align:right;font-family:var(--mono)">${fmt(totalFixed+varActual+totalSavings+debtMins)}</td>
+      <td style="text-align:right;font-family:var(--mono);color:${remaining<0?"var(--red)":"var(--green)"}">${fmt(remaining)}</td>
+      <td></td>
+    </tr>`;
+  }
+
+  // Pay calendar
+  const calDiv = $("pay-calendar");
+  if (calDiv) {
+    let running = 0;
+    calDiv.innerHTML = [1,2,3,4].map(w => {
+      running += netPay - totalFixed - totalVar/4;
+      const color = running >= 0 ? "var(--green)" : "var(--red)";
+      return `<div class="pay-week">
+        <div class="pay-week-label">Week ${w}</div>
+        <div class="pay-week-amount">${fmt(netPay)}</div>
+        <div class="pay-week-balance" style="color:${color}">Running: ${fmt(running)}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // Alert banner
+  const alertEl = $("dash-alert");
+  if (alertEl) {
+    if (remaining < 0) {
+      alertEl.style.display = "flex";
+      alertEl.className = "alert warn";
+      alertEl.textContent = "⚠️ You're spending more than you earn this period. Review your variable expenses or find ways to reduce fixed costs.";
+    } else if (remaining < netPay * 0.05) {
+      alertEl.style.display = "flex";
+      alertEl.className = "alert warn";
+      alertEl.textContent = "⚠️ Less than 5% of your paycheck is unallocated. Consider cutting a variable expense category.";
+    } else {
+      alertEl.style.display = "none";
+    }
+  }
+
+  saveAll();
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────
+
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+  $(`page-${id}`)?.classList.add("active");
+  event.target.classList.add("active");
+}
+
+// ── SAVE / LOAD ────────────────────────────────────────────────────────
+
+function gatherState() {
+  const state = { goals, debts, fields: {} };
+  document.querySelectorAll("input[id], select[id]").forEach(el => {
+    if (el.id && !el.readOnly) state.fields[el.id] = el.value;
+  });
+  return state;
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem("budgetTrackerData", JSON.stringify(gatherState()));
+    const bar = $("savebar");
+    bar.classList.add("show");
+    setTimeout(() => bar.classList.remove("show"), 1500);
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem("budgetTrackerData");
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    if (state.goals) { goals = state.goals; }
+    if (state.debts) { debts = state.debts; }
+    buildGoalsTable();
+    buildDebtTable();
+    if (state.fields) {
+      Object.entries(state.fields).forEach(([id, val]) => {
+        const el = $(id);
+        if (el && !el.readOnly) el.value = val;
+      });
+    }
+    recalc();
+  } catch(e) {}
+}
+
+function exportData() {
+  const data = JSON.stringify(gatherState(), null, 2);
+  const blob = new Blob([data], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "budget-backup-" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+}
+
+function importData() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const state = JSON.parse(ev.target.result);
+        localStorage.setItem("budgetTrackerData", JSON.stringify(state));
+        loadState();
+      } catch { alert("Invalid backup file."); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function clearAll() {
+  if (!confirm("Clear all data? This cannot be undone.")) return;
+  localStorage.removeItem("budgetTrackerData");
+  goals = JSON.parse(JSON.stringify(defaultGoals));
+  debts = JSON.parse(JSON.stringify(defaultDebts));
+  document.querySelectorAll("input[id]:not([readonly]), select[id]").forEach(el => {
+    if (el.tagName === "SELECT") el.selectedIndex = 0;
+    else if (el.type !== "date") el.value = "";
+  });
+  buildGoalsTable();
+  buildDebtTable();
+  recalc();
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────
+
+window.onload = () => {
+  buildFixedTable();
+  buildVarTable();
+  buildGoalsTable();
+  buildDebtTable();
+  loadState();
+
+  // Set today's date
+  const today = new Date().toISOString().slice(0,10);
+  if ($("var-week-date") && !$("var-week-date").value) $("var-week-date").value = today;
+
+  recalc();
+};
+
+
+// ════════════════════════════════════════════════════════════════
+// STATE — NEW FEATURES
+// ════════════════════════════════════════════════════════════════
+let sinkingFunds = [
+  { name: "Car Registration",    perPay: "", saved: "", target: "", date: "", notes: "" },
+  { name: "Holiday / Gifts",     perPay: "", saved: "", target: "", date: "", notes: "" },
+  { name: "Annual Insurance",    perPay: "", saved: "", target: "", date: "", notes: "" },
+  { name: "Home Repairs",        perPay: "", saved: "", target: "", date: "", notes: "" },
+  { name: "Vacation (annual)",   perPay: "", saved: "", target: "", date: "", notes: "" },
+];
+
+let transactions = [];
+
+let nwHistory = [];
+
+let calMonthOffset = 0; // 0 = current month
+
+// Category assignments for 50/30/20: true = needs, false = wants
+let ruleAssignments = {
+  "Groceries": true, "Dining Out": false, "Coffee / Drinks": false, "Meal Delivery": false,
+  "Gas / Fuel": true, "Parking / Tolls": true, "Rideshare": false,
+  "Medical / Pharmacy": true, "Personal Care": true,
+  "Household Supplies": true, "Home Maintenance": true,
+  "Entertainment / Events": false, "Hobbies / Recreation": false,
+  "Clothing": false, "Gifts / Donations": false,
+  "Kids / Children": true, "Pet Expenses": true, "Other / Misc": false,
+};
+
+// ════════════════════════════════════════════════════════════════
+// NET WORTH
+// ════════════════════════════════════════════════════════════════
+function recalcNW() {
+  const assets = [
+    v("nw-checking"), v("nw-savings-acc"), v("ef-saved") || 0,
+    v("nw-401k"), v("nw-ira"), v("nw-brokerage"),
+    v("nw-home"), v("nw-vehicle"), v("nw-other-asset")
+  ];
+
+  // Pull debt balances from debt tracker for CC mirror
+  let ccTotal = 0;
+  debts.forEach((d, i) => {
+    const bal = parseFloat(d.balance) || 0;
+    ccTotal += bal;
+  });
+
+  const liabs = [
+    v("nw-mortgage"), v("nw-auto-loan"), v("nw-student"),
+    ccTotal,
+    v("nw-personal-loan"), v("nw-medical"), v("nw-other-liab")
+  ];
+
+  const totalAssets = assets.reduce((a,b) => a+b, 0);
+  const totalLiab   = liabs.reduce((a,b)  => a+b, 0);
+  const netWorth    = totalAssets - totalLiab;
+
+  // Mirror values
+  const efMirror = $("nw-ef-mirror");
+  if (efMirror) efMirror.value = (v("ef-saved") || 0).toFixed(2);
+  const ccMirror = $("nw-cc-mirror");
+  if (ccMirror) ccMirror.value = ccTotal.toFixed(2);
+
+  setVal("nw-assets-sum", totalAssets);
+  setVal("nw-liab-sum",   totalLiab);
+
+  // Header displays
+  const nwEl = $("nw-total");
+  if (nwEl) {
+    nwEl.textContent = fmt(netWorth);
+    nwEl.className = "nw-number " + (netWorth >= 0 ? "positive" : "negative");
+  }
+  const subEl = $("nw-subtitle");
+  if (subEl) {
+    subEl.textContent = netWorth >= 0
+      ? `${fmt(totalAssets)} in assets — ${fmt(totalLiab)} in liabilities`
+      : `You owe ${fmt(Math.abs(netWorth))} more than you own. Keep paying down debt.`;
+  }
+
+  const aTot = $("nw-assets-total");
+  if (aTot) aTot.textContent = fmt(totalAssets);
+  const lTot = $("nw-liab-total");
+  if (lTot) lTot.textContent = fmt(totalLiab);
+
+  saveAll();
+}
+
+function snapshotNW() {
+  const assets = parseFloat($("nw-assets-sum")?.value) || 0;
+  const liabs  = parseFloat($("nw-liab-sum")?.value)   || 0;
+  const nw     = assets - liabs;
+  const today  = new Date().toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
+
+  nwHistory.unshift({ date: today, assets, liabs, nw });
+  renderNWHistory();
+  saveAll();
+}
+
+function renderNWHistory() {
+  const tbody = $("nw-history-body");
+  if (!tbody) return;
+  if (nwHistory.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);font-style:italic;padding:20px">Click "Snapshot Today" to record your net worth. Do this monthly to track progress.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = nwHistory.map((r, i) => {
+    const prev   = nwHistory[i+1];
+    const change = prev ? r.nw - prev.nw : null;
+    const chgStr = change !== null
+      ? `<span style="color:${change>=0?'var(--sage)':'var(--coral)'};font-family:var(--mono);font-weight:600">${change>=0?'+':''}${fmt(change)}</span>`
+      : '<span style="color:var(--muted)">—</span>';
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:11px">${r.date}</td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--sage)">${fmt(r.assets)}</td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--coral)">${fmt(r.liabs)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${r.nw>=0?'var(--sage)':'var(--coral)'}">${fmt(r.nw)}</td>
+      <td>${chgStr}</td>
+    </tr>`;
+  }).join("");
+}
+
+// ════════════════════════════════════════════════════════════════
+// BILL CALENDAR
+// ════════════════════════════════════════════════════════════════
+const BILL_CATEGORIES = {
+  "fix-rent": "housing",  "fix-ins":  "housing",  "fix-hoa": "housing",
+  "fix-elec": "utility",  "fix-gas":  "utility",  "fix-water":"utility",
+  "fix-inet": "utility",  "fix-phone":"utility",
+  "fix-car":  "transport","fix-car-ins":"transport",
+  "fix-stream":"sub", "fix-music":"sub","fix-gym":"sub","fix-amazon":"sub","fix-sw":"sub",
+  "fix-health":"health","fix-life":"health","fix-dent":"health",
+  "fix-child":"other","fix-stor":"other","fix-other":"other",
+};
+
+function changeCalMonth(delta) {
+  calMonthOffset += delta;
+  buildCalendar();
+}
+
+function buildCalendar() {
+  const calGrid = $("cal-grid");
+  if (!calGrid) return;
+
+  const now    = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth() + calMonthOffset, 1);
+  const year   = target.getFullYear();
+  const month  = target.getMonth();
+
+  const titleEl = $("cal-month-title");
+  if (titleEl) titleEl.textContent = target.toLocaleDateString("en-US", { month:"long", year:"numeric" });
+
+  // Mirror net pay
+  const netMirror = $("cal-net-mirror");
+  const netPay = parseFloat($("inc-net")?.value) || 0;
+  if (netMirror) netMirror.value = netPay.toFixed(2);
+
+  const payday1 = parseInt($("cal-payday1")?.value) || 0;
+  const payday2 = parseInt($("cal-payday2")?.value) || 0;
+  const paydays = [payday1, payday2 > 0 ? payday2 : null].filter(Boolean);
+
+  // Build bill map: day -> [{label, amount, category}]
+  const billMap = {};
+  fixedExpenseDefs.forEach(def => {
+    if (!def.id) return;
+    const dueEl  = $(`${def.id}-due`);
+    const amtEl  = $( def.id );
+    const due    = parseInt(dueEl?.value) || 0;
+    const amount = parseFloat(amtEl?.value) || 0;
+    if (due > 0 && amount > 0) {
+      if (!billMap[due]) billMap[due] = [];
+      const cat = BILL_CATEGORIES[def.id] || "other";
+      billMap[due].push({ label: def.label, amount, cat });
+    }
+  });
+
+  // Days in month, first weekday
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay    = new Date(year, month, 1).getDay(); // 0=Sun
+
+  // Rebuild grid (keep day headers)
+  const headers = Array.from(calGrid.querySelectorAll(".cal-day-header"));
+  calGrid.innerHTML = "";
+  headers.forEach(h => calGrid.appendChild(h));
+
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement("div");
+    empty.className = "cal-day empty";
+    calGrid.appendChild(empty);
+  }
+
+  let monthBillTotal = 0;
+  const today = new Date();
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
+  let payCount = 0;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const div = document.createElement("div");
+    div.className = "cal-day";
+
+    const isToday   = isCurrentMonth && day === today.getDate();
+    const isPayday  = paydays.includes(day);
+    if (isToday)  div.classList.add("today");
+    if (isPayday) div.classList.add("payday");
+
+    const numDiv = document.createElement("div");
+    numDiv.className = "cal-day-num";
+    numDiv.textContent = day;
+    div.appendChild(numDiv);
+
+    if (isPayday) {
+      const tag = document.createElement("div");
+      tag.className = "cal-bill payday-tag";
+      tag.textContent = `💰 ${fmt(netPay)}`;
+      div.appendChild(tag);
+      payCount++;
+    }
+
+    if (billMap[day]) {
+      billMap[day].forEach(bill => {
+        monthBillTotal += bill.amount;
+        const b = document.createElement("div");
+        b.className = `cal-bill ${bill.cat}`;
+        b.textContent = `${bill.label.length > 16 ? bill.label.slice(0,14)+'…' : bill.label} ${fmt(bill.amount)}`;
+        b.title = `${bill.label}: ${fmt(bill.amount)}`;
+        div.appendChild(b);
+      });
+    }
+    calGrid.appendChild(div);
+  }
+
+  const monthIncome = netPay * payCount;
+  const remain = monthIncome - monthBillTotal;
+  const remEl = $("cal-month-remain");
+
+  const totEl = $("cal-month-total");
+  const incEl = $("cal-month-income");
+  if (totEl) totEl.textContent = fmt(monthBillTotal);
+  if (incEl) incEl.textContent = fmt(monthIncome);
+  if (remEl) {
+    remEl.textContent = fmt(remain);
+    remEl.style.color = remain >= 0 ? "var(--sage)" : "var(--coral)";
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 50 / 30 / 20
+// ════════════════════════════════════════════════════════════════
+function buildRuleCatTable() {
+  const tbody = $("rule-cat-tbody");
+  if (!tbody) return;
+  const varCats = varExpenseDefs.filter(d => d.label).map(d => d.label);
+  tbody.innerHTML = varCats.map(cat => {
+    const isNeed = ruleAssignments[cat] !== false; // default needs
+    return `<tr>
+      <td>${cat}</td>
+      <td style="text-align:center">
+        <input type="radio" name="rule-${cat.replace(/\W/g,'_')}" value="need"
+          ${isNeed ? "checked" : ""}
+          onchange="ruleAssignments['${cat}']=true; recalcRule()">
+      </td>
+      <td style="text-align:center">
+        <input type="radio" name="rule-${cat.replace(/\W/g,'_')}" value="want"
+          ${!isNeed ? "checked" : ""}
+          onchange="ruleAssignments['${cat}']=false; recalcRule()">
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function recalcRule() {
+  const netPay = parseFloat($("inc-net")?.value) || 0;
+  if (netPay === 0) return;
+
+  // Needs = all fixed (weekly portion) + variable "needs"
+  const fixedWeekly = parseFloat($("fix-total-display")?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const fixedWeeklyPart = fixedWeekly / 4.33;
+
+  let needsVar = 0, wantsVar = 0;
+  varExpenseDefs.forEach(def => {
+    if (!def.id) return;
+    const act = parseFloat($(`${def.id}-act`)?.value) || 0;
+    if (ruleAssignments[def.label] !== false) needsVar += act;
+    else wantsVar += act;
+  });
+
+  const needs  = fixedWeeklyPart + needsVar;
+  const wants  = wantsVar;
+  const savingsTotal = parseFloat($("total-weekly-savings")?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const debtMin = debts.reduce((sum,d) => sum + (parseFloat(d.min)||0), 0);
+  const saves  = savingsTotal + debtMin;
+
+  const needsPct  = netPay > 0 ? needs  / netPay : 0;
+  const wantsPct  = netPay > 0 ? wants  / netPay : 0;
+  const savesPct  = netPay > 0 ? saves  / netPay : 0;
+
+  // Targets
+  const needsTarget = netPay * 0.50;
+  const wantsTarget = netPay * 0.30;
+  const savesTarget = netPay * 0.20;
+
+  function pctEl(id, pct) {
+    const el = $(id); if (!el) return;
+    el.textContent = (pct*100).toFixed(0) + "%";
+  }
+  function amtEl(id, actual, target) {
+    const el = $(id); if (!el) return;
+    el.textContent = `${fmt(actual)} of ${fmt(target)} target`;
+  }
+  function badge(id, pct, target, label) {
+    const el = $(id); if (!el) return;
+    const over = pct > target + 0.02;
+    const under = pct < target - 0.1;
+    if (over)       el.innerHTML = `<span class="rule-status-badge" style="background:var(--coral-dim);color:var(--coral);border:1px solid var(--coral)30">⬆ Over ${label} target</span>`;
+    else if (under) el.innerHTML = `<span class="rule-status-badge" style="background:var(--sage-dim);color:var(--sage);border:1px solid var(--sage)30">✓ Under ${label} target</span>`;
+    else            el.innerHTML = `<span class="rule-status-badge" style="background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold)30">~ On target</span>`;
+  }
+
+  pctEl("rule-needs-pct", needsPct);
+  pctEl("rule-wants-pct", wantsPct);
+  pctEl("rule-save-pct",  savesPct);
+  amtEl("rule-needs-amt", needs,  needsTarget);
+  amtEl("rule-wants-amt", wants,  wantsTarget);
+  amtEl("rule-save-amt",  saves,  savesTarget);
+  badge("rule-needs-badge", needsPct, 0.50, "50%");
+  badge("rule-wants-badge", wantsPct, 0.30, "30%");
+  badge("rule-save-badge",  savesPct, 0.20, "20%");
+
+  // Bar chart
+  const barsDiv = $("rule-bars");
+  if (barsDiv) {
+    const items = [
+      { label: "Fixed Expenses", amount: fixedWeeklyPart, color: "var(--sky)",      pct: fixedWeeklyPart/netPay },
+      { label: "Needs (var)",    amount: needsVar,        color: "var(--sky)",      pct: needsVar/netPay },
+      { label: "Wants",          amount: wants,           color: "var(--lavender)", pct: wantsPct },
+      { label: "Savings",        amount: savingsTotal,    color: "var(--sage)",     pct: savingsTotal/netPay },
+      { label: "Debt Payments",  amount: debtMin,         color: "var(--gold)",     pct: debtMin/netPay },
+    ];
+    barsDiv.innerHTML = items.map(item => `
+      <div class="rule-bar-row">
+        <div class="rule-bar-label">${item.label}</div>
+        <div class="rule-bar-wrap">
+          <div class="rule-bar-fill" style="width:${Math.min(item.pct*100,100)}%;background:${item.color}"></div>
+        </div>
+        <div class="rule-bar-val">${(item.pct*100).toFixed(0)}%</div>
+      </div>
+    `).join("");
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// TRANSACTIONS
+// ════════════════════════════════════════════════════════════════
+const TXN_CATEGORIES = [
+  "Groceries","Dining Out","Coffee / Drinks","Gas / Fuel","Utilities","Rent / Mortgage",
+  "Medical","Personal Care","Entertainment","Clothing","Subscriptions","Transportation",
+  "Gifts","Home / Repairs","Kids","Pets","Education","Side Income","Paycheck","Other",
+];
+
+function buildTxnCatFilter() {
+  const sel = $("txn-filter-cat");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">All Categories</option>' +
+    TXN_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join("");
+}
+
+function addTxn() {
+  const today = new Date().toISOString().slice(0,10);
+  transactions.unshift({
+    id: Date.now(),
+    date: today, desc: "", cat: "Other", amount: "", type: "expense", notes: ""
+  });
+  renderTxns();
+  saveAll();
+}
+
+function removeTxn(id) {
+  transactions = transactions.filter(t => t.id !== id);
+  renderTxns();
+  saveAll();
+}
+
+function renderTxns(filtered) {
+  const list = filtered || transactions;
+  const tbody = $("txn-tbody");
+  if (!tbody) return;
+
+  let totalIn = 0, totalOut = 0;
+  list.forEach(t => {
+    const a = parseFloat(t.amount) || 0;
+    if (t.type === "income") totalIn += a; else totalOut += a;
+  });
+  const net = totalIn - totalOut;
+
+  const countEl = $("txn-count");
+  const inEl    = $("txn-total-in");
+  const outEl   = $("txn-total-out");
+  const netEl   = $("txn-net");
+  if (countEl) countEl.textContent = list.length;
+  if (inEl)    inEl.textContent    = fmt(totalIn);
+  if (outEl)   outEl.textContent   = fmt(totalOut);
+  if (netEl) {
+    netEl.textContent = fmt(net);
+    netEl.style.color = net >= 0 ? "var(--sage)" : "var(--coral)";
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);font-style:italic;padding:20px">No transactions yet. Click "+ Add Transaction" to start logging.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(t => `
+    <tr>
+      <td><input type="date" class="select-input" value="${t.date}"
+        style="width:100%;font-size:11px"
+        oninput="updateTxn(${t.id},'date',this.value)"></td>
+      <td><input class="text-input" value="${t.desc}" placeholder="Description"
+        oninput="updateTxn(${t.id},'desc',this.value)"></td>
+      <td><select class="select-input" style="width:100%;font-size:11px"
+        onchange="updateTxn(${t.id},'cat',this.value)">
+        ${TXN_CATEGORIES.map(c => `<option value="${c}" ${c===t.cat?'selected':''}>${c}</option>`).join("")}
+      </select></td>
+      <td><input class="num-input" value="${t.amount}" placeholder="0.00"
+        oninput="updateTxn(${t.id},'amount',this.value)"></td>
+      <td style="text-align:center">
+        <select class="select-input" style="width:80px;font-size:11px;color:${t.type==='income'?'var(--sage)':'var(--coral)'}"
+          onchange="updateTxn(${t.id},'type',this.value);this.style.color=this.value==='income'?'var(--sage)':'var(--coral)'">
+          <option value="expense" ${t.type==='expense'?'selected':''}>Expense</option>
+          <option value="income"  ${t.type==='income'?'selected':''}>Income</option>
+        </select>
+      </td>
+      <td><input class="notes-field" value="${t.notes||''}" placeholder="Note..."
+        oninput="updateTxn(${t.id},'notes',this.value)"></td>
+      <td><button onclick="removeTxn(${t.id})" style="background:none;border:none;color:var(--coral);cursor:pointer;font-size:16px">×</button></td>
+    </tr>
+  `).join("");
+}
+
+function updateTxn(id, field, value) {
+  const t = transactions.find(tx => tx.id === id);
+  if (t) { t[field] = value; renderTxnSummary(); saveAll(); }
+}
+
+function renderTxnSummary() {
+  let totalIn = 0, totalOut = 0;
+  transactions.forEach(t => {
+    const a = parseFloat(t.amount) || 0;
+    if (t.type === "income") totalIn += a; else totalOut += a;
+  });
+  const net = totalIn - totalOut;
+  const inEl = $("txn-total-in"), outEl = $("txn-total-out"), netEl = $("txn-net");
+  const countEl = $("txn-count");
+  if (inEl)  inEl.textContent  = fmt(totalIn);
+  if (outEl) outEl.textContent = fmt(totalOut);
+  if (netEl) { netEl.textContent = fmt(net); netEl.style.color = net>=0?"var(--sage)":"var(--coral)"; }
+  if (countEl) countEl.textContent = transactions.length;
+}
+
+function filterTxns() {
+  const search  = $("txn-search")?.value.toLowerCase() || "";
+  const cat     = $("txn-filter-cat")?.value  || "";
+  const type    = $("txn-filter-type")?.value || "";
+  const fromStr = $("txn-filter-from")?.value || "";
+  const toStr   = $("txn-filter-to")?.value   || "";
+
+  const filtered = transactions.filter(t => {
+    if (search && !t.desc.toLowerCase().includes(search) && !t.notes?.toLowerCase().includes(search)) return false;
+    if (cat  && t.cat  !== cat)  return false;
+    if (type && t.type !== type) return false;
+    if (fromStr && t.date < fromStr) return false;
+    if (toStr   && t.date > toStr)   return false;
+    return true;
+  });
+  renderTxns(filtered);
+}
+
+function clearTxnFilters() {
+  const ids = ["txn-search","txn-filter-cat","txn-filter-type","txn-filter-from","txn-filter-to"];
+  ids.forEach(id => { const el = $(id); if (el) el.value = ""; });
+  renderTxns();
+}
+
+// ════════════════════════════════════════════════════════════════
+// SINKING FUNDS
+// ════════════════════════════════════════════════════════════════
+function addSinkingFund() {
+  sinkingFunds.push({ name: "New Fund", perPay: "", saved: "", target: "", date: "", notes: "" });
+  buildSFTable();
+  recalcSF();
+}
+
+function removeSF(i) {
+  sinkingFunds.splice(i, 1);
+  buildSFTable();
+  recalcSF();
+}
+
+function buildSFTable() {
+  const tbody = $("sf-tbody");
+  if (!tbody) return;
+  tbody.innerHTML = sinkingFunds.map((sf, i) => `
+    <tr>
+      <td><input class="text-input" value="${sf.name}" oninput="sinkingFunds[${i}].name=this.value;buildSFCards();saveAll()"></td>
+      <td><input class="num-input" id="sf-pay-${i}" value="${sf.perPay}" placeholder="0.00" oninput="sinkingFunds[${i}].perPay=this.value;recalcSF()"></td>
+      <td><input class="num-input" id="sf-saved-${i}" value="${sf.saved}" placeholder="0.00" oninput="sinkingFunds[${i}].saved=this.value;recalcSF()"></td>
+      <td><input class="num-input" id="sf-target-${i}" value="${sf.target}" placeholder="0.00" oninput="sinkingFunds[${i}].target=this.value;recalcSF()"></td>
+      <td><input class="num-input formula" id="sf-pct-${i}" readonly></td>
+      <td style="text-align:center"><input class="num-input formula" id="sf-pays-${i}" readonly style="text-align:center"></td>
+      <td><input type="date" class="select-input" value="${sf.date}" oninput="sinkingFunds[${i}].date=this.value;saveAll()" style="width:130px"></td>
+      <td><input class="notes-field" value="${sf.notes||''}" oninput="sinkingFunds[${i}].notes=this.value;saveAll()"></td>
+      <td><button onclick="removeSF(${i})" style="background:none;border:none;color:var(--coral);cursor:pointer;font-size:16px">×</button></td>
+    </tr>
+  `).join("");
+}
+
+function recalcSF() {
+  let totalSaved = 0, totalPerPay = 0;
+  sinkingFunds.forEach((sf, i) => {
+    const saved   = parseFloat(sf.saved)   || 0;
+    const target  = parseFloat(sf.target)  || 0;
+    const perPay  = parseFloat(sf.perPay)  || 0;
+    const pct     = target > 0 ? saved / target : 0;
+    const paysLeft = perPay > 0 && target > saved ? Math.ceil((target - saved) / perPay) : 0;
+
+    totalSaved   += saved;
+    totalPerPay  += perPay;
+
+    const pctEl  = $(`sf-pct-${i}`);
+    const paysEl = $(`sf-pays-${i}`);
+    if (pctEl)  pctEl.value  = (pct * 100).toFixed(1) + "%";
+    if (paysEl) paysEl.value = paysLeft > 0 ? paysLeft : (saved >= target && target > 0 ? "✓ Done" : "—");
+  });
+
+  const sTot = $("sf-total-saved");
+  const pTot = $("sf-total-per-pay");
+  if (sTot) sTot.textContent = fmt(totalSaved);
+  if (pTot) pTot.textContent = fmt(totalPerPay);
+
+  buildSFCards();
+  saveAll();
+}
+
+function buildSFCards() {
+  const cardsDiv = $("sf-cards");
+  if (!cardsDiv) return;
+  const colors = ["green","blue","amber","purple","red","sage","sky","lavender"];
+  cardsDiv.innerHTML = sinkingFunds.map((sf, i) => {
+    const saved  = parseFloat(sf.saved)  || 0;
+    const target = parseFloat(sf.target) || 1;
+    const perPay = parseFloat(sf.perPay) || 0;
+    const pct    = Math.min(saved / target, 1);
+    const color  = ["var(--sage)","var(--sky)","var(--gold)","var(--lavender)","var(--coral)"][i % 5];
+    const paysLeft = perPay > 0 && target > saved ? Math.ceil((target-saved)/perPay) : null;
+    return `
+      <div class="sf-card">
+        <div class="sf-card-name">${sf.name || "Unnamed Fund"}</div>
+        <div class="sf-card-date">${sf.date ? new Date(sf.date+'T00:00:00').toLocaleDateString("en-US",{month:"short",year:"numeric"}) : "No target date"}</div>
+        <div class="sf-amounts">
+          <span class="sf-saved" style="color:${color}">${fmt(saved)}</span>
+          <span class="sf-target">of ${fmt(parseFloat(sf.target)||0)}</span>
+        </div>
+        <div class="progress-wrap"><div class="progress-bar" style="width:${pct*100}%;background:${color}"></div></div>
+        <div class="sf-per-pay">${fmt(perPay)}/paycheck${paysLeft ? ' · ' + paysLeft + ' pays left' : ''}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ════════════════════════════════════════════════════════════════
+// CHARTS  (lightweight canvas — no Chart.js dependency)
+// ════════════════════════════════════════════════════════════════
+function drawCharts() {
+  drawDonut();
+  drawBarVar();
+  drawIncomeAlloc();
+  drawDebtTimeline();
+}
+
+function drawDonut() {
+  const canvas = $("chart-donut");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Collect variable spending by section
+  const sections = {};
+  varExpenseDefs.forEach(def => {
+    if (def.section) return;
+    const act = parseFloat($(`${def.id}-act`)?.value) || 0;
+    if (act === 0) return;
+    // Group by parent section label
+    sections[def.label] = act;
+  });
+
+  const entries = Object.entries(sections).filter(([,v]) => v > 0);
+  if (entries.length === 0) {
+    ctx.fillStyle = "#7a7469";
+    ctx.font = "12px 'Instrument Sans'";
+    ctx.textAlign = "center";
+    ctx.fillText("Enter actual spending in Variable tab", W/2, H/2);
+    return;
+  }
+
+  const palette = ["#5eaa7e","#4e8fc7","#e8a045","#8b7ecf","#e05c4b","#7eb8e8","#e8c87e","#aa5e7e","#5eaa9e","#a07ece"];
+  const total = entries.reduce((s,[,v]) => s+v, 0);
+  const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 16, rInner = R * 0.55;
+
+  let startAngle = -Math.PI/2;
+  entries.forEach(([label, val], i) => {
+    const slice = (val / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, startAngle, startAngle + slice);
+    ctx.closePath();
+    ctx.fillStyle = palette[i % palette.length];
+    ctx.fill();
+    startAngle += slice;
+  });
+
+  // Inner hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, rInner, 0, 2*Math.PI);
+  ctx.fillStyle = "#1f1e1b";
+  ctx.fill();
+
+  // Center text
+  ctx.fillStyle = "#f0ece4";
+  ctx.font = "bold 14px 'JetBrains Mono'";
+  ctx.textAlign = "center";
+  ctx.fillText("$" + total.toFixed(0), cx, cy - 4);
+  ctx.fillStyle = "#7a7469";
+  ctx.font = "10px 'Instrument Sans'";
+  ctx.fillText("total spent", cx, cy + 12);
+
+  // Legend (right side if space, below otherwise)
+  ctx.textAlign = "left";
+  entries.slice(0, 8).forEach(([label, val], i) => {
+    const lx = 8, ly = 20 + i * 20;
+    ctx.fillStyle = palette[i % palette.length];
+    ctx.fillRect(lx, ly - 8, 10, 10);
+    ctx.fillStyle = "#c8c2b6";
+    ctx.font = "9px 'Instrument Sans'";
+    ctx.fillText(`${label.slice(0,18)} (${((val/total)*100).toFixed(0)}%)`, lx + 14, ly);
+  });
+}
+
+function drawBarVar() {
+  const canvas = $("chart-bar-var");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  canvas.width  = canvas.parentElement.clientWidth - 32 || 400;
+  canvas.height = 260;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const items = varExpenseDefs
+    .filter(d => d.id)
+    .map(d => ({
+      label: d.label,
+      budget: parseFloat($(`${d.id}-bud`)?.value) || 0,
+      actual: parseFloat($(`${d.id}-act`)?.value) || 0,
+    }))
+    .filter(d => d.budget > 0 || d.actual > 0)
+    .slice(0, 10);
+
+  if (items.length === 0) {
+    ctx.fillStyle = "#7a7469";
+    ctx.font = "12px 'Instrument Sans'";
+    ctx.textAlign = "center";
+    ctx.fillText("Enter budget and actual amounts in Variable tab", W/2, H/2);
+    return;
+  }
+
+  const maxVal  = Math.max(...items.flatMap(d => [d.budget, d.actual]), 1);
+  const barW    = Math.floor((W - 60) / items.length / 2 - 4);
+  const chartH  = H - 50;
+  const padL    = 50;
+
+  // Y-axis gridlines
+  [0.25, 0.5, 0.75, 1].forEach(frac => {
+    const y = chartH - frac * chartH + 10;
+    ctx.strokeStyle = "#2e2c28";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W, y); ctx.stroke();
+    ctx.fillStyle = "#7a7469";
+    ctx.font = "9px 'JetBrains Mono'";
+    ctx.textAlign = "right";
+    ctx.fillText("$" + (frac * maxVal).toFixed(0), padL - 4, y + 3);
+  });
+
+  items.forEach((item, i) => {
+    const x   = padL + i * ((W - padL) / items.length);
+    const bH  = (item.budget / maxVal) * chartH;
+    const aH  = (item.actual / maxVal) * chartH;
+    const bY  = chartH - bH + 10;
+    const aY  = chartH - aH + 10;
+
+    // Budget bar
+    ctx.fillStyle = "#4e8fc740";
+    ctx.fillRect(x + 2, bY, barW, bH);
+    ctx.strokeStyle = "#4e8fc7";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 2, bY, barW, bH);
+
+    // Actual bar
+    const overBudget = item.actual > item.budget;
+    ctx.fillStyle = overBudget ? "#e05c4b80" : "#5eaa7e80";
+    ctx.fillRect(x + barW + 5, aY, barW, aH);
+    ctx.strokeStyle = overBudget ? "#e05c4b" : "#5eaa7e";
+    ctx.strokeRect(x + barW + 5, aY, barW, aH);
+
+    // Label
+    ctx.fillStyle = "#7a7469";
+    ctx.font = "8px 'Instrument Sans'";
+    ctx.textAlign = "center";
+    const lbl = item.label.slice(0,8);
+    ctx.fillText(lbl, x + barW + 2, chartH + 22);
+  });
+
+  // Legend
+  ctx.fillStyle = "#4e8fc7"; ctx.fillRect(padL, H - 14, 10, 8);
+  ctx.fillStyle = "#c8c2b6"; ctx.font = "10px 'Instrument Sans'"; ctx.textAlign = "left";
+  ctx.fillText("Budget", padL + 14, H - 7);
+  ctx.fillStyle = "#5eaa7e"; ctx.fillRect(padL + 80, H - 14, 10, 8);
+  ctx.fillText("Actual", padL + 94, H - 7);
+}
+
+function drawIncomeAlloc() {
+  const canvas = $("chart-income-alloc");
+  if (!canvas) return;
+  const ctx    = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const netPay = parseFloat($("inc-net")?.value) || 0;
+  if (netPay === 0) {
+    ctx.fillStyle = "#7a7469"; ctx.font = "12px 'Instrument Sans'";
+    ctx.textAlign = "center"; ctx.fillText("Enter your net pay in Income tab", W/2, H/2);
+    return;
+  }
+
+  const fixedW = (parseFloat($("fix-total-display")?.textContent?.replace(/[^0-9.]/g,'')) || 0) / 4.33;
+  const varAct  = parseFloat($("kpi-expenses")?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const savings = parseFloat($("total-weekly-savings")?.textContent?.replace(/[^0-9.]/g,'')) || 0;
+  const debtMin = debts.reduce((s,d) => s+(parseFloat(d.min)||0), 0);
+  const remain  = Math.max(netPay - fixedW - varAct - savings - debtMin, 0);
+
+  const slices = [
+    { label: "Fixed",    val: fixedW,  color: "#4e8fc7" },
+    { label: "Variable", val: varAct,  color: "#8b7ecf" },
+    { label: "Savings",  val: savings, color: "#5eaa7e" },
+    { label: "Debt Pay", val: debtMin, color: "#e8a045" },
+    { label: "Free",     val: remain,  color: "#3d3a35" },
+  ].filter(s => s.val > 0);
+
+  const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 24, inner = R * 0.5;
+  let angle = -Math.PI/2;
+  slices.forEach(s => {
+    const arc = (s.val / netPay) * 2 * Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,angle,angle+arc); ctx.closePath();
+    ctx.fillStyle = s.color; ctx.fill();
+    angle += arc;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,inner,0,2*Math.PI);
+  ctx.fillStyle = "#1f1e1b"; ctx.fill();
+  ctx.fillStyle = "#f0ece4"; ctx.font = "bold 13px 'JetBrains Mono'";
+  ctx.textAlign = "center"; ctx.fillText(fmt(netPay), cx, cy-3);
+  ctx.fillStyle = "#7a7469"; ctx.font = "9px 'Instrument Sans'";
+  ctx.fillText("net pay", cx, cy+12);
+
+  ctx.textAlign = "left";
+  slices.forEach((s, i) => {
+    const lx = 6, ly = 18 + i * 18;
+    ctx.fillStyle = s.color; ctx.fillRect(lx, ly-8, 10, 10);
+    ctx.fillStyle = "#c8c2b6"; ctx.font = "9px 'Instrument Sans'";
+    ctx.fillText(`${s.label} ${fmt(s.val)} (${netPay>0?((s.val/netPay)*100).toFixed(0):0}%)`, lx+14, ly);
+  });
+}
+
+function drawDebtTimeline() {
+  const canvas = $("chart-debt-timeline");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  canvas.width  = canvas.parentElement.clientWidth - 32 || 400;
+  canvas.height = 240;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const activeDebts = debts.filter(d => (parseFloat(d.balance)||0) > 0);
+  if (activeDebts.length === 0) {
+    ctx.fillStyle = "#7a7469"; ctx.font = "12px 'Instrument Sans'";
+    ctx.textAlign = "center"; ctx.fillText("Enter debts in Debt Tracker tab", W/2, H/2);
+    return;
+  }
+
+  const colors = ["#e05c4b","#e8a045","#8b7ecf","#4e8fc7","#5eaa7e","#7eb8e8"];
+  const padL = 50, padB = 30, chartW = W - padL - 10, chartH = H - padB - 10;
+  const maxMonths = 60;
+
+  // Simulate payoff for each debt
+  const lines = activeDebts.map((d, i) => {
+    let bal    = parseFloat(d.balance) || 0;
+    const apr  = (parseFloat(d.apr) || 0) / 100 / 12;
+    const pmt  = (parseFloat(d.min) || 0) + (parseFloat(d.extra) || 0);
+    const pts  = [bal];
+    for (let m = 1; m <= maxMonths; m++) {
+      const interest = bal * apr;
+      bal = Math.max(0, bal - pmt + interest);
+      pts.push(bal);
+      if (bal === 0) break;
+    }
+    return { name: d.name, pts, color: colors[i % colors.length] };
+  });
+
+  const maxBal = Math.max(...lines.flatMap(l => l.pts), 1);
+
+  // Gridlines
+  [0.25,0.5,0.75,1].forEach(frac => {
+    const y = chartH - frac * chartH + 10;
+    ctx.strokeStyle = "#2e2c28"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-10,y); ctx.stroke();
+    ctx.fillStyle = "#7a7469"; ctx.font = "9px 'JetBrains Mono'";
+    ctx.textAlign = "right";
+    ctx.fillText("$"+((frac*maxBal)/1000).toFixed(0)+"k", padL-4, y+3);
+  });
+
+  // X axis labels
+  [12,24,36,48,60].forEach(m => {
+    const x = padL + (m/maxMonths)*chartW;
+    ctx.fillStyle = "#7a7469"; ctx.font = "9px 'JetBrains Mono'";
+    ctx.textAlign = "center";
+    ctx.fillText(`${m}mo`, x, H - 8);
+  });
+
+  // Draw lines
+  lines.forEach(line => {
+    ctx.beginPath();
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth = 2;
+    line.pts.forEach((val, m) => {
+      const x = padL + (m / maxMonths) * chartW;
+      const y = chartH - (val / maxBal) * chartH + 10;
+      m === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  });
+
+  // Legend
+  ctx.textAlign = "left";
+  lines.forEach((line, i) => {
+    ctx.strokeStyle = line.color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(padL + i*110, H-16); ctx.lineTo(padL + i*110 + 18, H-16); ctx.stroke();
+    ctx.fillStyle = "#c8c2b6"; ctx.font = "9px 'Instrument Sans'";
+    ctx.fillText(line.name.slice(0,12), padL + i*110 + 22, H-12);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// UPDATE showPage to trigger renders on navigation
+// ════════════════════════════════════════════════════════════════
+const _origShowPage = showPage;
+function showPage(id) {
+  _origShowPage.call(this, id, event);
+  // Trigger renders for data-heavy tabs
+  setTimeout(() => {
+    if (id === "networth")     { recalcNW(); renderNWHistory(); }
+    if (id === "calendar")     buildCalendar();
+    if (id === "rule503020")   { buildRuleCatTable(); recalcRule(); }
+    if (id === "transactions") { buildTxnCatFilter(); renderTxns(); }
+    if (id === "sinking")      { buildSFTable(); recalcSF(); }
+    if (id === "charts")       setTimeout(drawCharts, 80);
+  }, 30);
+}
+
+// ════════════════════════════════════════════════════════════════
+// UPDATE gatherState / loadState for new features
+// ════════════════════════════════════════════════════════════════
+const _origGather = gatherState;
+function gatherState() {
+  const s = _origGather();
+  s.sinkingFunds  = sinkingFunds;
+  s.transactions  = transactions;
+  s.nwHistory     = nwHistory;
+  s.ruleAssign    = ruleAssignments;
+  s.calOffset     = calMonthOffset;
+  return s;
+}
+
+const _origLoad = loadState;
+function loadState() {
+  _origLoad();
+  try {
+    const raw = localStorage.getItem("budgetTrackerData");
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.sinkingFunds)  sinkingFunds     = s.sinkingFunds;
+    if (s.transactions)  transactions     = s.transactions;
+    if (s.nwHistory)     nwHistory        = s.nwHistory;
+    if (s.ruleAssign)    ruleAssignments  = s.ruleAssign;
+    if (s.calOffset != null) calMonthOffset = s.calOffset;
+    renderNWHistory();
+    buildSFTable();
+    recalcSF();
+    buildTxnCatFilter();
+    renderTxns();
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════════════
+// HOOK recalc to also update new panels
+// ════════════════════════════════════════════════════════════════
+const _origRecalc = recalc;
+function recalc() {
+  _origRecalc();
+  recalcNW();
+  recalcRule();
+  recalcSF();
+  buildCalendar();
+}
+
+</script>
+</body>
+</html>
